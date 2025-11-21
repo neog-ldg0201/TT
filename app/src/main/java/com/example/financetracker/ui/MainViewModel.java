@@ -25,16 +25,16 @@ public class MainViewModel extends AndroidViewModel {
     }
 
     public void getMonthlyIncome(String yearMonth, TransactionRepository.OnResultCallback<Long> callback) {
-        repository.getIncomeByDate(yearMonth, callback);
+        repository.getMonthlyIncome(yearMonth, callback);
     }
 
     public void getMonthlyExpense(String yearMonth, TransactionRepository.OnResultCallback<Long> callback) {
-        repository.getExpenseByDate(yearMonth, callback);
+        repository.getMonthlyExpense(yearMonth, callback);
     }
 
     public void getMonthlyBalance(String yearMonth, TransactionRepository.OnResultCallback<Long> callback) {
-        repository.getIncomeByDate(yearMonth, income -> {
-            repository.getExpenseByDate(yearMonth, expense -> {
+        repository.getMonthlyIncome(yearMonth, income -> {
+            repository.getMonthlyExpense(yearMonth, expense -> {
                 long balance = income - expense;
                 callback.onResult(balance);
             });

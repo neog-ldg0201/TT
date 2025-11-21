@@ -1,13 +1,17 @@
 package com.example.financetracker.ui;
 
 import android.content.Intent;
+import android.graphics.Color;
 import android.os.Bundle;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
+import androidx.recyclerview.widget.LinearLayoutManager;
+import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.financetracker.R;
+import com.example.financetracker.model.Transaction;
 import com.example.financetracker.utils.DateUtils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
@@ -15,8 +19,13 @@ import com.prolificinteractive.materialcalendarview.MaterialCalendarView;
 import com.prolificinteractive.materialcalendarview.OnDateSelectedListener;
 
 import java.text.NumberFormat;
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -26,6 +35,8 @@ public class MainActivity extends AppCompatActivity {
     private TextView totalExpenseText;
     private TextView balanceText;
     private FloatingActionButton fabAddTransaction;
+    private RecyclerView recentTransactionsRecyclerView;
+    private TransactionAdapter recentTransactionsAdapter;
 
     private MainViewModel viewModel;
 
@@ -48,14 +59,29 @@ public class MainActivity extends AppCompatActivity {
         totalExpenseText = findViewById(R.id.totalExpenseText);
         balanceText = findViewById(R.id.balanceText);
         fabAddTransaction = findViewById(R.id.fabAddTransaction);
+        recentTransactionsRecyclerView = findViewById(R.id.recentTransactionsRecyclerView);
+
+        // Setup RecyclerView
+        recentTransactionsAdapter = new TransactionAdapter(new ArrayList<>());
+        recentTransactionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        recentTransactionsRecyclerView.setAdapter(recentTransactionsAdapter);
     }
 
     private void setupViewModel() {
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
         viewModel.getAllTransactions().observe(this, transactions -> {
+            if (transactions != null && !transactions.isEmpty()) {
+                // Update recent transactions (limit to 10 most recent)
+                List<Transaction> recentTransactions = transactions.size() > 10
+                    ? transactions.subList(0, 10)
+                    : transactions;
+                recentTransactionsAdapter.setTransactions(recentTransactions);
+
+                // Update calendar decorators
+                updateCalendarDecorators(transactions);
+            }
             updateMonthlySummary();
-            // Update calendar decorators here if needed
         });
     }
 
@@ -121,6 +147,52 @@ public class MainActivity extends AppCompatActivity {
         Intent intent = new Intent(MainActivity.this, DayDetailActivity.class);
         intent.putExtra("date", date);
         startActivity(intent);
+    }
+
+    private void updateCalendarDecorators(List<Transaction> transactions) {
+        // Group transactions by date
+        Map<String, Long> incomeByDate = new HashMap<>();
+        Map<String, Long> expenseByDate = new HashMap<>();
+        HashSet<CalendarDay> incomeDates = new HashSet<>();
+        HashSet<CalendarDay> expenseDates = new HashSet<>();
+
+        for (Transaction transaction : transactions) {
+            String date = transaction.getDate();
+            long amount = transaction.getAmount();
+
+            if ("INCOME".equals(transaction.getType())) {
+                incomeByDate.put(date, incomeByDate.getOrDefault(date, 0L) + amount);
+                incomeDates.add(dateStringToCalendarDay(date));
+            } else {
+                expenseByDate.put(date, expenseByDate.getOrDefault(date, 0L) + amount);
+                expenseDates.add(dateStringToCalendarDay(date));
+            }
+        }
+
+        // Remove old decorators
+        calendarView.removeDecorators();
+
+        // Add dot decorators for income and expense
+        if (!incomeDates.isEmpty()) {
+            calendarView.addDecorator(new DotDecorator(
+                getResources().getColor(R.color.income_color), incomeDates));
+        }
+        if (!expenseDates.isEmpty()) {
+            calendarView.addDecorator(new DotDecorator(
+                getResources().getColor(R.color.expense_color), expenseDates));
+        }
+    }
+
+    private CalendarDay dateStringToCalendarDay(String dateStr) {
+        try {
+            String[] parts = dateStr.split("-");
+            int year = Integer.parseInt(parts[0]);
+            int month = Integer.parseInt(parts[1]);
+            int day = Integer.parseInt(parts[2]);
+            return CalendarDay.from(year, month, day);
+        } catch (Exception e) {
+            return CalendarDay.today();
+        }
     }
 
     private String formatCurrency(long amount) {

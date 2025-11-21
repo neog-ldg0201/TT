@@ -54,6 +54,20 @@ public class TransactionRepository {
         });
     }
 
+    public void getMonthlyIncome(String yearMonth, OnResultCallback<Long> callback) {
+        executorService.execute(() -> {
+            long result = transactionDao.getMonthlyIncome(yearMonth);
+            callback.onResult(result);
+        });
+    }
+
+    public void getMonthlyExpense(String yearMonth, OnResultCallback<Long> callback) {
+        executorService.execute(() -> {
+            long result = transactionDao.getMonthlyExpense(yearMonth);
+            callback.onResult(result);
+        });
+    }
+
     public interface OnResultCallback<T> {
         void onResult(T result);
     }

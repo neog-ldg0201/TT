@@ -50,21 +50,24 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     static class TransactionViewHolder extends RecyclerView.ViewHolder {
         private TextView categoryText;
         private TextView descriptionText;
-        private TextView timeText;
+        private TextView dateTimeText;
         private TextView amountText;
 
         public TransactionViewHolder(@NonNull View itemView) {
             super(itemView);
             categoryText = itemView.findViewById(R.id.categoryText);
             descriptionText = itemView.findViewById(R.id.descriptionText);
-            timeText = itemView.findViewById(R.id.timeText);
+            dateTimeText = itemView.findViewById(R.id.dateTimeText);
             amountText = itemView.findViewById(R.id.amountText);
         }
 
         public void bind(Transaction transaction) {
             categoryText.setText(transaction.getCategory());
             descriptionText.setText(transaction.getDescription());
-            timeText.setText(transaction.getTime());
+
+            // Format date and time together
+            String dateTime = formatDateTime(transaction.getDate(), transaction.getTime());
+            dateTimeText.setText(dateTime);
 
             NumberFormat formatter = NumberFormat.getNumberInstance(Locale.KOREA);
             String formattedAmount = formatter.format(transaction.getAmount()) + "원";
@@ -77,6 +80,16 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
                 amountText.setText("-" + formattedAmount);
                 amountText.setTextColor(itemView.getContext().getResources()
                         .getColor(R.color.expense_color));
+            }
+        }
+
+        private String formatDateTime(String date, String time) {
+            try {
+                // Convert 2024-01-01 to 2024.01.01
+                String formattedDate = date.replace("-", ".");
+                return formattedDate + " " + time;
+            } catch (Exception e) {
+                return date + " " + time;
             }
         }
     }

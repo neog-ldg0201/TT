@@ -37,8 +37,10 @@ public class MainActivity extends AppCompatActivity {
     private FloatingActionButton fabAddTransaction;
     private RecyclerView recentTransactionsRecyclerView;
     private TransactionAdapter recentTransactionsAdapter;
+    private TextView monthlyTransactionsHeader;
 
     private MainViewModel viewModel;
+    private String currentYearMonth;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -60,29 +62,42 @@ public class MainActivity extends AppCompatActivity {
         balanceText = findViewById(R.id.balanceText);
         fabAddTransaction = findViewById(R.id.fabAddTransaction);
         recentTransactionsRecyclerView = findViewById(R.id.recentTransactionsRecyclerView);
+        monthlyTransactionsHeader = findViewById(R.id.monthlyTransactionsHeader);
 
         // Setup RecyclerView
         recentTransactionsAdapter = new TransactionAdapter(new ArrayList<>());
         recentTransactionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         recentTransactionsRecyclerView.setAdapter(recentTransactionsAdapter);
+
+        // Initialize current year-month
+        CalendarDay today = CalendarDay.today();
+        currentYearMonth = String.format(Locale.US, "%04d-%02d", today.getYear(), today.getMonth());
     }
 
     private void setupViewModel() {
         viewModel = new ViewModelProvider(this).get(MainViewModel.class);
 
         viewModel.getAllTransactions().observe(this, transactions -> {
-            if (transactions != null && !transactions.isEmpty()) {
-                // Update recent transactions (limit to 10 most recent)
-                List<Transaction> recentTransactions = transactions.size() > 10
-                    ? transactions.subList(0, 10)
-                    : transactions;
-                recentTransactionsAdapter.setTransactions(recentTransactions);
+            if (transactions != null) {
+                // Filter transactions for current month only
+                List<Transaction> monthlyTransactions = filterTransactionsByMonth(transactions, currentYearMonth);
+                recentTransactionsAdapter.setTransactions(monthlyTransactions);
 
-                // Update calendar decorators
+                // Update calendar decorators with all transactions
                 updateCalendarDecorators(transactions);
             }
             updateMonthlySummary();
         });
+    }
+
+    private List<Transaction> filterTransactionsByMonth(List<Transaction> transactions, String yearMonth) {
+        List<Transaction> filtered = new ArrayList<>();
+        for (Transaction transaction : transactions) {
+            if (transaction.getDate().startsWith(yearMonth)) {
+                filtered.add(transaction);
+            }
+        }
+        return filtered;
     }
 
     private void setupCalendar() {
@@ -95,12 +110,22 @@ public class MainActivity extends AppCompatActivity {
         });
 
         calendarView.setOnMonthChangedListener((widget, date) -> {
+            // Update current year-month
+            currentYearMonth = String.format(Locale.US, "%04d-%02d", date.getYear(), date.getMonth());
+
+            // Update header text
             updateMonthYearText(date);
+            updateMonthlyTransactionsHeader(date);
+
+            // Update summary and refresh transaction list
             updateMonthlySummary();
+            refreshMonthlyTransactions();
         });
 
         // Set initial month/year text
-        updateMonthYearText(calendarView.getCurrentDate());
+        CalendarDay initialDate = calendarView.getCurrentDate();
+        updateMonthYearText(initialDate);
+        updateMonthlyTransactionsHeader(initialDate);
     }
 
     private void setupFab() {
@@ -193,6 +218,22 @@ public class MainActivity extends AppCompatActivity {
         } catch (Exception e) {
             return CalendarDay.today();
         }
+    }
+
+    private void updateMonthlyTransactionsHeader(CalendarDay date) {
+        String headerText = String.format(Locale.KOREA, "%d년 %d월 거래 내역",
+            date.getYear(), date.getMonth());
+        monthlyTransactionsHeader.setText(headerText);
+    }
+
+    private void refreshMonthlyTransactions() {
+        // Trigger observer to refresh the transaction list
+        viewModel.getAllTransactions().observe(this, transactions -> {
+            if (transactions != null) {
+                List<Transaction> monthlyTransactions = filterTransactionsByMonth(transactions, currentYearMonth);
+                recentTransactionsAdapter.setTransactions(monthlyTransactions);
+            }
+        });
     }
 
     private String formatCurrency(long amount) {

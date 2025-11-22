@@ -1,18 +1,26 @@
 package com.example.financetracker.ui;
 
+import android.Manifest;
+import android.app.AlertDialog;
 import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
+import android.provider.Settings;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import androidx.activity.result.ActivityResultLauncher;
+import androidx.activity.result.contract.ActivityResultContracts;
 import androidx.core.app.NotificationCompat;
+import androidx.core.content.ContextCompat;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -21,6 +29,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.financetracker.R;
 import com.example.financetracker.model.Transaction;
+import com.example.financetracker.service.TossNotificationListenerService;
 import com.example.financetracker.utils.DateUtils;
 import com.google.android.material.floatingactionbutton.FloatingActionButton;
 import com.prolificinteractive.materialcalendarview.CalendarDay;
@@ -40,6 +49,9 @@ public class MainActivity extends AppCompatActivity {
 
     private static final String TEST_CHANNEL_ID = "test_notification_channel";
     private static final int TEST_NOTIFICATION_ID = 9999;
+
+    private AlertDialog permissionDialog;
+    private ActivityResultLauncher<String> notificationPermissionLauncher;
 
     private MaterialCalendarView calendarView;
     private TextView monthYearText;
@@ -61,6 +73,14 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
+        // Initialize permission launcher
+        notificationPermissionLauncher = registerForActivityResult(
+                new ActivityResultContracts.RequestPermission(),
+                isGranted -> {
+                    checkAndShowPermissionDialog();
+                }
+        );
+
         initViews();
         setupViewModel();
         setupCalendar();
@@ -68,6 +88,9 @@ public class MainActivity extends AppCompatActivity {
         setupTestButton();
         createTestNotificationChannel();
         updateMonthlySummary();
+
+        // Check permissions on start
+        checkAndShowPermissionDialog();
     }
 
     private void initViews() {
@@ -345,5 +368,109 @@ public class MainActivity extends AppCompatActivity {
     protected void onResume() {
         super.onResume();
         updateMonthlySummary();
+        // Re-check permissions when returning to the app
+        checkAndShowPermissionDialog();
+    }
+
+    // ==================== Permission Handling ====================
+
+    private void checkAndShowPermissionDialog() {
+        boolean hasNotificationPermission = hasNotificationPermission();
+        boolean hasNotificationListenerPermission = isNotificationListenerEnabled();
+
+        if (!hasNotificationPermission || !hasNotificationListenerPermission) {
+            showPermissionDialog(hasNotificationPermission, hasNotificationListenerPermission);
+        } else {
+            dismissPermissionDialog();
+        }
+    }
+
+    private boolean hasNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            return ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS)
+                    == PackageManager.PERMISSION_GRANTED;
+        }
+        return true; // Pre-Android 13 doesn't need this permission
+    }
+
+    private boolean isNotificationListenerEnabled() {
+        ComponentName componentName = new ComponentName(this, TossNotificationListenerService.class);
+        String flat = Settings.Secure.getString(getContentResolver(), "enabled_notification_listeners");
+        return flat != null && flat.contains(componentName.flattenToString());
+    }
+
+    private void showPermissionDialog(boolean hasNotificationPermission, boolean hasNotificationListenerPermission) {
+        // Dismiss any existing dialog
+        dismissPermissionDialog();
+
+        StringBuilder message = new StringBuilder();
+        message.append("앱을 사용하려면 다음 권한이 필요합니다:\n\n");
+
+        if (!hasNotificationPermission) {
+            message.append("• 알림 권한: 거래 등록 알림을 보내기 위해 필요합니다.\n\n");
+        }
+
+        if (!hasNotificationListenerPermission) {
+            message.append("• 알림 접근 권한: 토스 결제 알림을 읽어오기 위해 필요합니다.\n\n");
+        }
+
+        message.append("모든 권한을 허용해주세요.");
+
+        AlertDialog.Builder builder = new AlertDialog.Builder(this)
+                .setTitle("권한 필요")
+                .setMessage(message.toString())
+                .setCancelable(false);
+
+        // Add button for notification permission (Android 13+)
+        if (!hasNotificationPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            builder.setPositiveButton("알림 권한 허용", (dialog, which) -> {
+                notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS);
+            });
+        }
+
+        // Add button for notification listener permission
+        if (!hasNotificationListenerPermission) {
+            String buttonText = hasNotificationPermission ? "알림 접근 설정" : "알림 접근 설정";
+            if (!hasNotificationPermission && Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                builder.setNegativeButton(buttonText, (dialog, which) -> {
+                    openNotificationListenerSettings();
+                });
+            } else {
+                builder.setPositiveButton(buttonText, (dialog, which) -> {
+                    openNotificationListenerSettings();
+                });
+            }
+        }
+
+        // Add neutral button to check again
+        builder.setNeutralButton("다시 확인", (dialog, which) -> {
+            checkAndShowPermissionDialog();
+        });
+
+        permissionDialog = builder.create();
+        permissionDialog.show();
+    }
+
+    private void dismissPermissionDialog() {
+        if (permissionDialog != null && permissionDialog.isShowing()) {
+            permissionDialog.dismiss();
+            permissionDialog = null;
+        }
+    }
+
+    private void openNotificationListenerSettings() {
+        try {
+            Intent intent = new Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS);
+            startActivity(intent);
+            Toast.makeText(this, "'" + getString(R.string.app_name) + "'을(를) 찾아 활성화해주세요", Toast.LENGTH_LONG).show();
+        } catch (Exception e) {
+            Toast.makeText(this, "설정을 열 수 없습니다. 직접 설정에서 알림 접근 권한을 허용해주세요.", Toast.LENGTH_LONG).show();
+        }
+    }
+
+    @Override
+    protected void onDestroy() {
+        super.onDestroy();
+        dismissPermissionDialog();
     }
 }

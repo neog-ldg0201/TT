@@ -14,14 +14,13 @@
         android:theme="@style/Theme.FinanceTracker"
         tools:targetApi="31">
 
-        <!-- Main Activity -->
+        <!-- Main Activity (hidden from launcher) -->
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
             android:theme="@style/Theme.FinanceTracker">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
-                <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
 
@@ -49,6 +48,18 @@
                 <action android:name="android.service.notification.NotificationListenerService" />
             </intent-filter>
         </service>
+
+        <!-- Activity alias for accessing app from Settings -->
+        <activity-alias
+            android:name=".SettingsLauncher"
+            android:targetActivity=".ui.MainActivity"
+            android:exported="true"
+            android:label="가계부 설정">
+            <intent-filter>
+                <action android:name="android.intent.action.APPLICATION_PREFERENCES" />
+                <category android:name="android.intent.category.DEFAULT" />
+            </intent-filter>
+        </activity-alias>
 
     </application>
 

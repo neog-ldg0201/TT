@@ -18,7 +18,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
-            app:contentScrim="@color/primary_color"
+            app:contentScrim="@color/primary"
             app:title="@string/app_name"
             app:expandedTitleGravity="top"
             app:expandedTitleMarginStart="16dp"

@@ -76,10 +76,15 @@ public class TossNotificationListenerService extends NotificationListenerService
         String description = data.get("description");
         String type = data.get("type"); // "INCOME" or "EXPENSE"
 
+        // Format amount with commas for display
+        String formattedAmount = formatAmount(amount);
+        String typeText = "INCOME".equals(type) ? "입금" : "결제";
+
         // Create intent to open AddTransactionActivity
         Intent intent = new Intent(this, AddTransactionActivity.class);
         intent.putExtra("amount", amount);
         intent.putExtra("description", description);
+        intent.putExtra("type", type);  // Pass transaction type
         intent.putExtra("date", DateUtils.getCurrentDate());
         intent.putExtra("time", DateUtils.getCurrentTime());
         intent.putExtra("isFromNotification", true);
@@ -87,26 +92,40 @@ public class TossNotificationListenerService extends NotificationListenerService
 
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this,
-                0,
+                (int) System.currentTimeMillis(), // Unique request code
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
 
-        // Build notification
+        // Build notification with clear message
+        String notificationTitle = String.format("💰 %s원 %s", formattedAmount, typeText);
+        String notificationText = String.format("%s - 가계부에 등록하시겠습니까?", description);
+
         NotificationCompat.Builder builder = new NotificationCompat.Builder(this, CHANNEL_ID)
                 .setSmallIcon(R.drawable.ic_notification)
-                .setContentTitle(getString(R.string.notification_title))
-                .setContentText(String.format("%s원 %s - 등록하시겠습니까?",
-                        amount, "EXPENSE".equals(type) ? "지출" : "수입"))
+                .setContentTitle(notificationTitle)
+                .setContentText(notificationText)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationText))
                 .setPriority(NotificationCompat.PRIORITY_HIGH)
                 .setAutoCancel(true)
                 .setContentIntent(pendingIntent)
-                .addAction(R.drawable.ic_add, getString(R.string.register), pendingIntent);
+                .addAction(R.drawable.ic_add, "등록하기", pendingIntent);
 
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
         if (notificationManager != null) {
-            notificationManager.notify(NOTIFICATION_ID, builder.build());
-            Log.d(TAG, "Transaction notification shown");
+            // Use unique notification ID for each transaction
+            int notificationId = (int) System.currentTimeMillis();
+            notificationManager.notify(notificationId, builder.build());
+            Log.d(TAG, "Transaction notification shown - Amount: " + amount + ", Type: " + type);
+        }
+    }
+
+    private String formatAmount(String amount) {
+        try {
+            long value = Long.parseLong(amount);
+            return String.format("%,d", value);
+        } catch (NumberFormatException e) {
+            return amount;
         }
     }
 

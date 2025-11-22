@@ -49,6 +49,7 @@ public class AddTransactionActivity extends AppCompatActivity {
         // Check if coming from notification
         String notificationAmount = getIntent().getStringExtra("amount");
         String notificationDescription = getIntent().getStringExtra("description");
+        String notificationType = getIntent().getStringExtra("type");
         String notificationDate = getIntent().getStringExtra("date");
         String notificationTime = getIntent().getStringExtra("time");
 
@@ -57,6 +58,14 @@ public class AddTransactionActivity extends AppCompatActivity {
         }
         if (notificationDescription != null) {
             descriptionEditText.setText(notificationDescription);
+        }
+        // Set transaction type (income/expense) based on notification
+        if (notificationType != null) {
+            if ("INCOME".equals(notificationType)) {
+                typeRadioGroup.check(R.id.incomeRadio);
+            } else {
+                typeRadioGroup.check(R.id.expenseRadio);
+            }
         }
         if (notificationDate != null) {
             selectedDate = notificationDate;

@@ -1,9 +1,18 @@
 package com.example.financetracker.ui;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
 import android.content.Intent;
 import android.graphics.Color;
+import android.os.Build;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.Looper;
 import android.widget.TextView;
+import android.widget.Toast;
+
+import androidx.core.app.NotificationCompat;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
@@ -29,18 +38,23 @@ import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
+    private static final String TEST_CHANNEL_ID = "test_notification_channel";
+    private static final int TEST_NOTIFICATION_ID = 9999;
+
     private MaterialCalendarView calendarView;
     private TextView monthYearText;
     private TextView totalIncomeText;
     private TextView totalExpenseText;
     private TextView balanceText;
     private FloatingActionButton fabAddTransaction;
+    private FloatingActionButton fabTest;
     private RecyclerView recentTransactionsRecyclerView;
     private TransactionAdapter recentTransactionsAdapter;
     private TextView monthlyTransactionsHeader;
 
     private MainViewModel viewModel;
     private String currentYearMonth;
+    private Handler handler;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -51,6 +65,8 @@ public class MainActivity extends AppCompatActivity {
         setupViewModel();
         setupCalendar();
         setupFab();
+        setupTestButton();
+        createTestNotificationChannel();
         updateMonthlySummary();
     }
 
@@ -61,6 +77,7 @@ public class MainActivity extends AppCompatActivity {
         totalExpenseText = findViewById(R.id.totalExpenseText);
         balanceText = findViewById(R.id.balanceText);
         fabAddTransaction = findViewById(R.id.fabAddTransaction);
+        fabTest = findViewById(R.id.fabTest);
         recentTransactionsRecyclerView = findViewById(R.id.recentTransactionsRecyclerView);
         monthlyTransactionsHeader = findViewById(R.id.monthlyTransactionsHeader);
 
@@ -72,6 +89,9 @@ public class MainActivity extends AppCompatActivity {
         // Initialize current year-month
         CalendarDay today = CalendarDay.today();
         currentYearMonth = String.format(Locale.US, "%04d-%02d", today.getYear(), today.getMonth());
+
+        // Initialize handler
+        handler = new Handler(Looper.getMainLooper());
     }
 
     private void setupViewModel() {
@@ -133,6 +153,86 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(MainActivity.this, AddTransactionActivity.class);
             startActivity(intent);
         });
+    }
+
+    private void setupTestButton() {
+        fabTest.setOnClickListener(v -> {
+            Toast.makeText(this, "10초 후 테스트 알림이 발송됩니다", Toast.LENGTH_SHORT).show();
+
+            handler.postDelayed(() -> {
+                showTestNotification();
+            }, 10000); // 10 seconds
+        });
+    }
+
+    private void createTestNotificationChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            CharSequence name = "테스트 알림";
+            String description = "테스트 거래 알림 채널";
+            int importance = NotificationManager.IMPORTANCE_HIGH;
+            NotificationChannel channel = new NotificationChannel(TEST_CHANNEL_ID, name, importance);
+            channel.setDescription(description);
+
+            NotificationManager notificationManager = getSystemService(NotificationManager.class);
+            if (notificationManager != null) {
+                notificationManager.createNotificationChannel(channel);
+            }
+        }
+    }
+
+    private void showTestNotification() {
+        // Test data - simulating a Toss payment notification
+        String testAmount = "6600";
+        String testDescription = "테스트 가맹점";
+        String testType = "EXPENSE";
+
+        // Format amount with commas
+        String formattedAmount;
+        try {
+            long value = Long.parseLong(testAmount);
+            formattedAmount = String.format("%,d", value);
+        } catch (NumberFormatException e) {
+            formattedAmount = testAmount;
+        }
+
+        String typeText = "INCOME".equals(testType) ? "입금" : "결제";
+
+        // Create intent to open AddTransactionActivity
+        Intent intent = new Intent(this, AddTransactionActivity.class);
+        intent.putExtra("amount", testAmount);
+        intent.putExtra("description", testDescription);
+        intent.putExtra("type", testType);
+        intent.putExtra("date", DateUtils.getCurrentDate());
+        intent.putExtra("time", DateUtils.getCurrentTime());
+        intent.putExtra("isFromNotification", true);
+        intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+
+        PendingIntent pendingIntent = PendingIntent.getActivity(
+                this,
+                (int) System.currentTimeMillis(),
+                intent,
+                PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
+        );
+
+        // Build notification
+        String notificationTitle = String.format("💰 %s원 %s", formattedAmount, typeText);
+        String notificationText = String.format("%s - 가계부에 등록하시겠습니까?", testDescription);
+
+        NotificationCompat.Builder builder = new NotificationCompat.Builder(this, TEST_CHANNEL_ID)
+                .setSmallIcon(R.drawable.ic_notification)
+                .setContentTitle(notificationTitle)
+                .setContentText(notificationText)
+                .setStyle(new NotificationCompat.BigTextStyle().bigText(notificationText))
+                .setPriority(NotificationCompat.PRIORITY_HIGH)
+                .setAutoCancel(true)
+                .setContentIntent(pendingIntent)
+                .addAction(R.drawable.ic_add, "등록하기", pendingIntent);
+
+        NotificationManager notificationManager = getSystemService(NotificationManager.class);
+        if (notificationManager != null) {
+            notificationManager.notify(TEST_NOTIFICATION_ID, builder.build());
+            Toast.makeText(this, "테스트 알림이 발송되었습니다!", Toast.LENGTH_SHORT).show();
+        }
     }
 
     private void updateMonthYearText(CalendarDay date) {

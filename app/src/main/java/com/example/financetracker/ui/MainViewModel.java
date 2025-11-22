@@ -40,4 +40,8 @@ public class MainViewModel extends AndroidViewModel {
             });
         });
     }
+
+    public void delete(Transaction transaction) {
+        repository.delete(transaction);
+    }
 }

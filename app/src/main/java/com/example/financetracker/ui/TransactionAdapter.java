@@ -18,9 +18,27 @@ import java.util.Locale;
 public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.TransactionViewHolder> {
 
     private List<Transaction> transactions;
+    private OnTransactionClickListener clickListener;
+    private OnTransactionLongClickListener longClickListener;
+
+    public interface OnTransactionClickListener {
+        void onTransactionClick(Transaction transaction);
+    }
+
+    public interface OnTransactionLongClickListener {
+        void onTransactionLongClick(Transaction transaction);
+    }
 
     public TransactionAdapter(List<Transaction> transactions) {
         this.transactions = transactions;
+    }
+
+    public void setOnTransactionClickListener(OnTransactionClickListener listener) {
+        this.clickListener = listener;
+    }
+
+    public void setOnTransactionLongClickListener(OnTransactionLongClickListener listener) {
+        this.longClickListener = listener;
     }
 
     public void setTransactions(List<Transaction> transactions) {
@@ -40,6 +58,20 @@ public class TransactionAdapter extends RecyclerView.Adapter<TransactionAdapter.
     public void onBindViewHolder(@NonNull TransactionViewHolder holder, int position) {
         Transaction transaction = transactions.get(position);
         holder.bind(transaction);
+
+        holder.itemView.setOnClickListener(v -> {
+            if (clickListener != null) {
+                clickListener.onTransactionClick(transaction);
+            }
+        });
+
+        holder.itemView.setOnLongClickListener(v -> {
+            if (longClickListener != null) {
+                longClickListener.onTransactionLongClick(transaction);
+                return true;
+            }
+            return false;
+        });
     }
 
     @Override

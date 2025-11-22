@@ -14,11 +14,14 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
 import android.provider.Settings;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
 import androidx.activity.result.contract.ActivityResultContracts;
+import androidx.appcompat.widget.Toolbar;
 import androidx.core.app.NotificationCompat;
 import androidx.core.content.ContextCompat;
 
@@ -82,6 +85,7 @@ public class MainActivity extends AppCompatActivity {
         );
 
         initViews();
+        setupToolbar();
         setupViewModel();
         setupCalendar();
         setupFab();
@@ -109,12 +113,46 @@ public class MainActivity extends AppCompatActivity {
         recentTransactionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         recentTransactionsRecyclerView.setAdapter(recentTransactionsAdapter);
 
+        // Setup click listener for editing transaction
+        recentTransactionsAdapter.setOnTransactionClickListener(transaction -> {
+            Intent intent = new Intent(MainActivity.this, AddTransactionActivity.class);
+            intent.putExtra(AddTransactionActivity.EXTRA_EDIT_MODE, true);
+            intent.putExtra(AddTransactionActivity.EXTRA_TRANSACTION_ID, transaction.getId());
+            startActivity(intent);
+        });
+
+        // Setup long click listener for deleting transaction
+        recentTransactionsAdapter.setOnTransactionLongClickListener(transaction -> {
+            showDeleteConfirmationDialog(transaction);
+        });
+
         // Initialize current year-month
         CalendarDay today = CalendarDay.today();
         currentYearMonth = String.format(Locale.US, "%04d-%02d", today.getYear(), today.getMonth());
 
         // Initialize handler
         handler = new Handler(Looper.getMainLooper());
+    }
+
+    private void setupToolbar() {
+        Toolbar toolbar = findViewById(R.id.toolbar);
+        setSupportActionBar(toolbar);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_settings) {
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
+            return true;
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     private void setupViewModel() {
@@ -472,5 +510,24 @@ public class MainActivity extends AppCompatActivity {
     protected void onDestroy() {
         super.onDestroy();
         dismissPermissionDialog();
+    }
+
+    private void showDeleteConfirmationDialog(Transaction transaction) {
+        NumberFormat formatter = NumberFormat.getNumberInstance(Locale.KOREA);
+        String amount = formatter.format(transaction.getAmount()) + "원";
+        String type = "INCOME".equals(transaction.getType()) ? "수입" : "지출";
+
+        String message = String.format("다음 거래를 삭제하시겠습니까?\n\n[%s] %s\n%s - %s",
+                type, amount, transaction.getCategory(), transaction.getDescription());
+
+        new AlertDialog.Builder(this)
+                .setTitle("거래 삭제")
+                .setMessage(message)
+                .setPositiveButton("삭제", (dialog, which) -> {
+                    viewModel.delete(transaction);
+                    Toast.makeText(this, "거래가 삭제되었습니다", Toast.LENGTH_SHORT).show();
+                })
+                .setNegativeButton("취소", null)
+                .show();
     }
 }

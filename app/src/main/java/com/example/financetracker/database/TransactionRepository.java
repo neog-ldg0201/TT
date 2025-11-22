@@ -68,6 +68,13 @@ public class TransactionRepository {
         });
     }
 
+    public void getTransactionById(int id, com.example.financetracker.ui.AddTransactionViewModel.TransactionCallback callback) {
+        executorService.execute(() -> {
+            Transaction transaction = transactionDao.getTransactionById(id);
+            callback.onResult(transaction);
+        });
+    }
+
     public interface OnResultCallback<T> {
         void onResult(T result);
     }

@@ -39,6 +39,13 @@
             android:theme="@style/Theme.FinanceTracker"
             android:windowSoftInputMode="adjustResize" />
 
+        <!-- Settings Activity -->
+        <activity
+            android:name=".ui.SettingsActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity"
+            android:theme="@style/Theme.FinanceTracker" />
+
         <!-- Notification Listener Service -->
         <service
             android:name=".service.TossNotificationListenerService"

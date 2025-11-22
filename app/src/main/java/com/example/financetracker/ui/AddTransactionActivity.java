@@ -4,7 +4,6 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
-import android.view.View;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.RadioGroup;
@@ -16,12 +15,18 @@ import androidx.lifecycle.ViewModelProvider;
 
 import com.example.financetracker.R;
 import com.example.financetracker.model.Transaction;
+import com.example.financetracker.utils.CategoryManager;
 import com.example.financetracker.utils.DateUtils;
 import com.google.android.material.textfield.TextInputEditText;
 
+import java.util.ArrayList;
 import java.util.Calendar;
+import java.util.List;
 
 public class AddTransactionActivity extends AppCompatActivity {
+
+    public static final String EXTRA_TRANSACTION_ID = "transaction_id";
+    public static final String EXTRA_EDIT_MODE = "edit_mode";
 
     private RadioGroup typeRadioGroup;
     private TextInputEditText amountEditText;
@@ -33,56 +38,44 @@ public class AddTransactionActivity extends AppCompatActivity {
     private Button cancelButton;
 
     private AddTransactionViewModel viewModel;
+    private CategoryManager categoryManager;
     private String selectedDate;
     private String selectedTime;
     private boolean isFromNotification;
+    private boolean isEditMode;
+    private int editTransactionId = -1;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_add_transaction);
 
+        categoryManager = new CategoryManager(this);
+
         initViews();
         setupViewModel();
         setupListeners();
-        setupSpinner();
         initializeDateTime();
+
+        // Check if edit mode
+        isEditMode = getIntent().getBooleanExtra(EXTRA_EDIT_MODE, false);
+        editTransactionId = getIntent().getIntExtra(EXTRA_TRANSACTION_ID, -1);
 
         // Check if coming from notification
         isFromNotification = getIntent().getBooleanExtra("isFromNotification", false);
-        String notificationAmount = getIntent().getStringExtra("amount");
-        String notificationDescription = getIntent().getStringExtra("description");
-        String notificationType = getIntent().getStringExtra("type");
-        String notificationDate = getIntent().getStringExtra("date");
-        String notificationTime = getIntent().getStringExtra("time");
 
-        if (notificationAmount != null) {
-            amountEditText.setText(notificationAmount);
-        }
-        if (notificationDescription != null) {
-            descriptionEditText.setText(notificationDescription);
-        }
-        // Set transaction type (income/expense) based on notification
-        if (notificationType != null) {
-            if ("INCOME".equals(notificationType)) {
-                typeRadioGroup.check(R.id.incomeRadio);
-            } else {
-                typeRadioGroup.check(R.id.expenseRadio);
-            }
-        }
-        if (notificationDate != null) {
-            selectedDate = notificationDate;
-            dateEditText.setText(DateUtils.formatDateKorean(notificationDate));
-        }
-        if (notificationTime != null) {
-            selectedTime = notificationTime;
-            timeEditText.setText(notificationTime);
+        // Setup initial categories based on current type
+        updateCategorySpinner(getCurrentType());
+
+        // Handle notification data
+        handleNotificationData();
+
+        // Handle edit mode
+        if (isEditMode && editTransactionId != -1) {
+            loadTransactionForEdit();
         }
 
-        if (getSupportActionBar() != null) {
-            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
-            getSupportActionBar().setTitle("거래 추가");
-        }
+        setupActionBar();
     }
 
     private void initViews() {
@@ -105,23 +98,103 @@ public class AddTransactionActivity extends AppCompatActivity {
         timeEditText.setOnClickListener(v -> showTimePicker());
         saveButton.setOnClickListener(v -> saveTransaction());
         cancelButton.setOnClickListener(v -> navigateBack());
+
+        // Listen to type changes to update categories
+        typeRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
+            String type = checkedId == R.id.incomeRadio ? "INCOME" : "EXPENSE";
+            updateCategorySpinner(type);
+        });
     }
 
-    private void setupSpinner() {
-        String[] categories = {
-            getString(R.string.category_food),
-            getString(R.string.category_transport),
-            getString(R.string.category_shopping),
-            getString(R.string.category_entertainment),
-            getString(R.string.category_bills),
-            getString(R.string.category_salary),
-            getString(R.string.category_etc)
-        };
+    private String getCurrentType() {
+        return typeRadioGroup.getCheckedRadioButtonId() == R.id.incomeRadio ? "INCOME" : "EXPENSE";
+    }
+
+    private void updateCategorySpinner(String type) {
+        List<String> categories = new ArrayList<>();
+
+        // Add "분류 선택" as first item if from notification
+        if (isFromNotification && categorySpinner.getSelectedItemPosition() <= 0) {
+            categories.add("분류 선택");
+        }
+
+        categories.addAll(categoryManager.getCategoriesForType(type));
 
         ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
                 android.R.layout.simple_spinner_item, categories);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         categorySpinner.setAdapter(adapter);
+    }
+
+    private void handleNotificationData() {
+        String notificationAmount = getIntent().getStringExtra("amount");
+        String notificationDescription = getIntent().getStringExtra("description");
+        String notificationType = getIntent().getStringExtra("type");
+        String notificationDate = getIntent().getStringExtra("date");
+        String notificationTime = getIntent().getStringExtra("time");
+
+        if (notificationAmount != null) {
+            amountEditText.setText(notificationAmount);
+        }
+        if (notificationDescription != null) {
+            descriptionEditText.setText(notificationDescription);
+        }
+        if (notificationType != null) {
+            if ("INCOME".equals(notificationType)) {
+                typeRadioGroup.check(R.id.incomeRadio);
+            } else {
+                typeRadioGroup.check(R.id.expenseRadio);
+            }
+            updateCategorySpinner(notificationType);
+        }
+        if (notificationDate != null) {
+            selectedDate = notificationDate;
+            dateEditText.setText(DateUtils.formatDateKorean(notificationDate));
+        }
+        if (notificationTime != null) {
+            selectedTime = notificationTime;
+            timeEditText.setText(notificationTime);
+        }
+    }
+
+    private void loadTransactionForEdit() {
+        viewModel.getTransactionById(editTransactionId, transaction -> {
+            if (transaction != null) {
+                runOnUiThread(() -> {
+                    amountEditText.setText(String.valueOf(transaction.getAmount()));
+                    descriptionEditText.setText(transaction.getDescription());
+
+                    if ("INCOME".equals(transaction.getType())) {
+                        typeRadioGroup.check(R.id.incomeRadio);
+                    } else {
+                        typeRadioGroup.check(R.id.expenseRadio);
+                    }
+
+                    updateCategorySpinner(transaction.getType());
+
+                    // Set category selection
+                    ArrayAdapter adapter = (ArrayAdapter) categorySpinner.getAdapter();
+                    for (int i = 0; i < adapter.getCount(); i++) {
+                        if (adapter.getItem(i).equals(transaction.getCategory())) {
+                            categorySpinner.setSelection(i);
+                            break;
+                        }
+                    }
+
+                    selectedDate = transaction.getDate();
+                    selectedTime = transaction.getTime();
+                    dateEditText.setText(DateUtils.formatDateKorean(selectedDate));
+                    timeEditText.setText(selectedTime);
+                });
+            }
+        });
+    }
+
+    private void setupActionBar() {
+        if (getSupportActionBar() != null) {
+            getSupportActionBar().setDisplayHomeAsUpEnabled(true);
+            getSupportActionBar().setTitle(isEditMode ? "거래 수정" : "거래 추가");
+        }
     }
 
     private void initializeDateTime() {
@@ -166,30 +239,40 @@ public class AddTransactionActivity extends AppCompatActivity {
             return;
         }
 
-        long amount = Long.parseLong(amountStr);
-        String type = typeRadioGroup.getCheckedRadioButtonId() == R.id.incomeRadio ? "INCOME" : "EXPENSE";
         String category = categorySpinner.getSelectedItem().toString();
+        if ("분류 선택".equals(category)) {
+            Toast.makeText(this, "분류를 선택해주세요", Toast.LENGTH_SHORT).show();
+            return;
+        }
+
+        long amount = Long.parseLong(amountStr);
+        String type = getCurrentType();
         String description = descriptionEditText.getText().toString().trim();
-        boolean isFromNotification = getIntent().getBooleanExtra("isFromNotification", false);
 
-        Transaction transaction = new Transaction(
-                type,
-                amount,
-                category,
-                description,
-                selectedDate,
-                selectedTime,
-                isFromNotification
-        );
+        if (isEditMode && editTransactionId != -1) {
+            // Update existing transaction
+            Transaction transaction = new Transaction(
+                    type, amount, category, description,
+                    selectedDate, selectedTime, false
+            );
+            transaction.setId(editTransactionId);
+            viewModel.update(transaction);
+            Toast.makeText(this, R.string.transaction_updated, Toast.LENGTH_SHORT).show();
+        } else {
+            // Insert new transaction
+            Transaction transaction = new Transaction(
+                    type, amount, category, description,
+                    selectedDate, selectedTime, isFromNotification
+            );
+            viewModel.insert(transaction);
+            Toast.makeText(this, R.string.transaction_added, Toast.LENGTH_SHORT).show();
+        }
 
-        viewModel.insert(transaction);
-        Toast.makeText(this, R.string.transaction_added, Toast.LENGTH_SHORT).show();
         navigateBack();
     }
 
     private void navigateBack() {
         if (isFromNotification) {
-            // If coming from notification, go to MainActivity
             Intent intent = new Intent(this, MainActivity.class);
             intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
             startActivity(intent);

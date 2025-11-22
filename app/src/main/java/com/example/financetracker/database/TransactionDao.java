@@ -42,4 +42,7 @@ public interface TransactionDao {
 
     @Query("SELECT SUM(amount) FROM transactions WHERE type = 'EXPENSE' AND date LIKE :yearMonth || '%'")
     long getMonthlyExpense(String yearMonth);
+
+    @Query("SELECT * FROM transactions WHERE id = :id")
+    Transaction getTransactionById(int id);
 }

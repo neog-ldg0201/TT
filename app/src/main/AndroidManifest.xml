@@ -17,7 +17,7 @@
         <activity
             android:name=".ui.MainActivity"
             android:exported="true"
-            android:theme="@style/Theme.FinanceTracker">
+            android:theme="@style/Theme.FinanceTracker.NoActionBar">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -29,14 +29,14 @@
             android:name=".ui.DayDetailActivity"
             android:exported="false"
             android:parentActivityName=".ui.MainActivity"
-            android:theme="@style/Theme.FinanceTracker" />
+            android:theme="@style/Theme.FinanceTracker.NoActionBar" />
 
         <!-- Add Transaction Activity -->
         <activity
             android:name=".ui.AddTransactionActivity"
             android:exported="false"
             android:parentActivityName=".ui.MainActivity"
-            android:theme="@style/Theme.FinanceTracker"
+            android:theme="@style/Theme.FinanceTracker.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
 
         <!-- Settings Activity -->
@@ -44,7 +44,7 @@
             android:name=".ui.SettingsActivity"
             android:exported="false"
             android:parentActivityName=".ui.MainActivity"
-            android:theme="@style/Theme.FinanceTracker" />
+            android:theme="@style/Theme.FinanceTracker.NoActionBar" />
 
         <!-- Notification Listener Service -->
         <service

@@ -2,6 +2,7 @@ package com.example.financetracker.ui;
 
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.ArrayAdapter;
@@ -34,6 +35,7 @@ public class AddTransactionActivity extends AppCompatActivity {
     private AddTransactionViewModel viewModel;
     private String selectedDate;
     private String selectedTime;
+    private boolean isFromNotification;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -47,6 +49,7 @@ public class AddTransactionActivity extends AppCompatActivity {
         initializeDateTime();
 
         // Check if coming from notification
+        isFromNotification = getIntent().getBooleanExtra("isFromNotification", false);
         String notificationAmount = getIntent().getStringExtra("amount");
         String notificationDescription = getIntent().getStringExtra("description");
         String notificationType = getIntent().getStringExtra("type");
@@ -101,7 +104,7 @@ public class AddTransactionActivity extends AppCompatActivity {
         dateEditText.setOnClickListener(v -> showDatePicker());
         timeEditText.setOnClickListener(v -> showTimePicker());
         saveButton.setOnClickListener(v -> saveTransaction());
-        cancelButton.setOnClickListener(v -> finish());
+        cancelButton.setOnClickListener(v -> navigateBack());
     }
 
     private void setupSpinner() {
@@ -181,12 +184,28 @@ public class AddTransactionActivity extends AppCompatActivity {
 
         viewModel.insert(transaction);
         Toast.makeText(this, R.string.transaction_added, Toast.LENGTH_SHORT).show();
-        finish();
+        navigateBack();
+    }
+
+    private void navigateBack() {
+        if (isFromNotification) {
+            // If coming from notification, go to MainActivity
+            Intent intent = new Intent(this, MainActivity.class);
+            intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
+            startActivity(intent);
+        } else {
+            finish();
+        }
     }
 
     @Override
     public boolean onSupportNavigateUp() {
-        finish();
+        navigateBack();
         return true;
+    }
+
+    @Override
+    public void onBackPressed() {
+        navigateBack();
     }
 }

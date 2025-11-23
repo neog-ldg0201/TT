@@ -20,15 +20,14 @@
             app:layout_scrollFlags="scroll|exitUntilCollapsed"
             app:contentScrim="@color/primary"
             app:title="@string/app_name"
-            app:expandedTitleGravity="top"
-            app:expandedTitleMarginStart="16dp"
-            app:expandedTitleMarginTop="16dp"
+            app:expandedTitleTextColor="@android:color/transparent"
             app:collapsedTitleTextAppearance="@style/TextAppearance.AppCompat.Widget.ActionBar.Title">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
+                android:paddingTop="?attr/actionBarSize"
                 app:layout_collapseMode="parallax">
 
                 <!-- Summary Card -->

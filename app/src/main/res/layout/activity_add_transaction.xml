@@ -20,6 +20,14 @@
             android:layout_marginBottom="16dp">
 
             <RadioButton
+                android:id="@+id/incomeRadio"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/income"
+                android:textSize="16sp"/>
+
+            <RadioButton
                 android:id="@+id/expenseRadio"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
@@ -27,14 +35,6 @@
                 android:text="@string/expense"
                 android:textSize="16sp"
                 android:checked="true"/>
-
-            <RadioButton
-                android:id="@+id/incomeRadio"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/income"
-                android:textSize="16sp"/>
         </RadioGroup>
 
         <!-- Amount Input -->
@@ -119,21 +119,21 @@
             android:orientation="horizontal">
 
             <Button
-                android:id="@+id/cancelButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/cancel"
-                android:layout_marginEnd="8dp"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
-
-            <Button
                 android:id="@+id/saveButton"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/save"
-                android:layout_marginStart="8dp"/>
+                android:layout_marginEnd="8dp"/>
+
+            <Button
+                android:id="@+id/cancelButton"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/cancel"
+                android:layout_marginStart="8dp"
+                style="@style/Widget.MaterialComponents.Button.OutlinedButton"/>
         </LinearLayout>
     </LinearLayout>
 </ScrollView>

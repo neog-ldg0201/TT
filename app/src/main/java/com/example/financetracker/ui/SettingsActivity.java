@@ -12,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.financetracker.R;
 import com.example.financetracker.utils.CategoryManager;
+import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.textfield.TextInputEditText;
 
 import java.util.ArrayList;
@@ -21,15 +22,13 @@ public class SettingsActivity extends AppCompatActivity {
 
     private CategoryManager categoryManager;
 
-    private RecyclerView incomeCategoryRecyclerView;
-    private RecyclerView expenseCategoryRecyclerView;
-    private TextInputEditText newIncomeCategoryEditText;
-    private TextInputEditText newExpenseCategoryEditText;
-    private Button addIncomeCategoryButton;
-    private Button addExpenseCategoryButton;
+    private TabLayout tabLayout;
+    private RecyclerView categoryRecyclerView;
+    private TextInputEditText newCategoryEditText;
+    private Button addCategoryButton;
 
-    private CategoryAdapter incomeAdapter;
-    private CategoryAdapter expenseAdapter;
+    private CategoryAdapter categoryAdapter;
+    private boolean isIncomeTab = true; // 현재 수입 탭인지 여부
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -40,17 +39,16 @@ public class SettingsActivity extends AppCompatActivity {
 
         initViews();
         setupToolbar();
-        setupRecyclerViews();
+        setupTabs();
+        setupRecyclerView();
         setupButtons();
     }
 
     private void initViews() {
-        incomeCategoryRecyclerView = findViewById(R.id.incomeCategoryRecyclerView);
-        expenseCategoryRecyclerView = findViewById(R.id.expenseCategoryRecyclerView);
-        newIncomeCategoryEditText = findViewById(R.id.newIncomeCategoryEditText);
-        newExpenseCategoryEditText = findViewById(R.id.newExpenseCategoryEditText);
-        addIncomeCategoryButton = findViewById(R.id.addIncomeCategoryButton);
-        addExpenseCategoryButton = findViewById(R.id.addExpenseCategoryButton);
+        tabLayout = findViewById(R.id.tabLayout);
+        categoryRecyclerView = findViewById(R.id.categoryRecyclerView);
+        newCategoryEditText = findViewById(R.id.newCategoryEditText);
+        addCategoryButton = findViewById(R.id.addCategoryButton);
     }
 
     private void setupToolbar() {
@@ -62,58 +60,91 @@ public class SettingsActivity extends AppCompatActivity {
         toolbar.setNavigationOnClickListener(v -> finish());
     }
 
-    private void setupRecyclerViews() {
-        // Income categories
-        List<String> incomeCategories = new ArrayList<>(categoryManager.getIncomeCategories());
-        incomeAdapter = new CategoryAdapter(incomeCategories, (category, position) -> {
-            showDeleteConfirmDialog(category, position, true);
-        });
-        incomeCategoryRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        incomeCategoryRecyclerView.setAdapter(incomeAdapter);
+    private void setupTabs() {
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                isIncomeTab = tab.getPosition() == 0;
+                updateCategoryList();
+                updateButtonColor();
+                updateHint();
+            }
 
-        // Expense categories
-        List<String> expenseCategories = new ArrayList<>(categoryManager.getExpenseCategories());
-        expenseAdapter = new CategoryAdapter(expenseCategories, (category, position) -> {
-            showDeleteConfirmDialog(category, position, false);
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {}
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {}
         });
-        expenseCategoryRecyclerView.setLayoutManager(new LinearLayoutManager(this));
-        expenseCategoryRecyclerView.setAdapter(expenseAdapter);
+
+        // 초기 버튼 색상 및 힌트 설정
+        updateButtonColor();
+        updateHint();
+    }
+
+    private void setupRecyclerView() {
+        List<String> categories = new ArrayList<>(categoryManager.getIncomeCategories());
+        categoryAdapter = new CategoryAdapter(categories, (category, position) -> {
+            showDeleteConfirmDialog(category, position);
+        });
+        categoryRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        categoryRecyclerView.setAdapter(categoryAdapter);
     }
 
     private void setupButtons() {
-        addIncomeCategoryButton.setOnClickListener(v -> {
-            String newCategory = newIncomeCategoryEditText.getText().toString().trim();
+        addCategoryButton.setOnClickListener(v -> {
+            String newCategory = newCategoryEditText.getText().toString().trim();
             if (!newCategory.isEmpty()) {
-                categoryManager.addIncomeCategory(newCategory);
-                incomeAdapter.setCategories(new ArrayList<>(categoryManager.getIncomeCategories()));
-                newIncomeCategoryEditText.setText("");
-                Toast.makeText(this, "수입 분류가 추가되었습니다", Toast.LENGTH_SHORT).show();
-            }
-        });
-
-        addExpenseCategoryButton.setOnClickListener(v -> {
-            String newCategory = newExpenseCategoryEditText.getText().toString().trim();
-            if (!newCategory.isEmpty()) {
-                categoryManager.addExpenseCategory(newCategory);
-                expenseAdapter.setCategories(new ArrayList<>(categoryManager.getExpenseCategories()));
-                newExpenseCategoryEditText.setText("");
-                Toast.makeText(this, "지출 분류가 추가되었습니다", Toast.LENGTH_SHORT).show();
+                if (isIncomeTab) {
+                    categoryManager.addIncomeCategory(newCategory);
+                    Toast.makeText(this, "수입 분류가 추가되었습니다", Toast.LENGTH_SHORT).show();
+                } else {
+                    categoryManager.addExpenseCategory(newCategory);
+                    Toast.makeText(this, "지출 분류가 추가되었습니다", Toast.LENGTH_SHORT).show();
+                }
+                updateCategoryList();
+                newCategoryEditText.setText("");
             }
         });
     }
 
-    private void showDeleteConfirmDialog(String category, int position, boolean isIncome) {
+    private void updateCategoryList() {
+        List<String> categories;
+        if (isIncomeTab) {
+            categories = new ArrayList<>(categoryManager.getIncomeCategories());
+        } else {
+            categories = new ArrayList<>(categoryManager.getExpenseCategories());
+        }
+        categoryAdapter.setCategories(categories);
+    }
+
+    private void updateButtonColor() {
+        if (isIncomeTab) {
+            addCategoryButton.setBackgroundTintList(getResources().getColorStateList(R.color.income_color, getTheme()));
+        } else {
+            addCategoryButton.setBackgroundTintList(getResources().getColorStateList(R.color.expense_color, getTheme()));
+        }
+    }
+
+    private void updateHint() {
+        if (isIncomeTab) {
+            newCategoryEditText.setHint("새 수입 분류 추가");
+        } else {
+            newCategoryEditText.setHint("새 지출 분류 추가");
+        }
+    }
+
+    private void showDeleteConfirmDialog(String category, int position) {
         new AlertDialog.Builder(this)
                 .setTitle("분류 삭제")
                 .setMessage("'" + category + "' 분류를 삭제하시겠습니까?")
                 .setPositiveButton("삭제", (dialog, which) -> {
-                    if (isIncome) {
+                    if (isIncomeTab) {
                         categoryManager.removeIncomeCategory(category);
-                        incomeAdapter.setCategories(new ArrayList<>(categoryManager.getIncomeCategories()));
                     } else {
                         categoryManager.removeExpenseCategory(category);
-                        expenseAdapter.setCategories(new ArrayList<>(categoryManager.getExpenseCategories()));
                     }
+                    updateCategoryList();
                     Toast.makeText(this, "분류가 삭제되었습니다", Toast.LENGTH_SHORT).show();
                 })
                 .setNegativeButton("취소", null)

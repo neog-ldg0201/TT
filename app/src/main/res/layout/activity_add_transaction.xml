@@ -25,7 +25,8 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/income"
-                android:textSize="16sp"/>
+                android:textSize="16sp"
+                android:checked="true"/>
 
             <RadioButton
                 android:id="@+id/expenseRadio"
@@ -33,8 +34,7 @@
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/expense"
-                android:textSize="16sp"
-                android:checked="true"/>
+                android:textSize="16sp"/>
         </RadioGroup>
 
         <!-- Amount Input -->

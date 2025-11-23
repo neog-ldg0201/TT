@@ -113,10 +113,8 @@ public class AddTransactionActivity extends AppCompatActivity {
     private void updateCategorySpinner(String type) {
         List<String> categories = new ArrayList<>();
 
-        // Add "분류 선택" as first item if from notification
-        if (isFromNotification && categorySpinner.getSelectedItemPosition() <= 0) {
-            categories.add("분류 선택");
-        }
+        // Always add "분류 선택" as first item
+        categories.add("분류 선택");
 
         categories.addAll(categoryManager.getCategoriesForType(type));
 
@@ -124,6 +122,11 @@ public class AddTransactionActivity extends AppCompatActivity {
                 android.R.layout.simple_spinner_item, categories);
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         categorySpinner.setAdapter(adapter);
+
+        // 알림에서 온 경우 "분류 선택"으로 고정
+        if (isFromNotification) {
+            categorySpinner.setSelection(0);
+        }
     }
 
     private void handleNotificationData() {
@@ -170,11 +173,13 @@ public class AddTransactionActivity extends AppCompatActivity {
                         typeRadioGroup.check(R.id.expenseRadio);
                     }
 
+                    // Edit 모드에서는 알림 플래그 해제
+                    isFromNotification = false;
                     updateCategorySpinner(transaction.getType());
 
-                    // Set category selection
+                    // Set category selection (index 0 is "분류 선택", so start from 1)
                     ArrayAdapter adapter = (ArrayAdapter) categorySpinner.getAdapter();
-                    for (int i = 0; i < adapter.getCount(); i++) {
+                    for (int i = 1; i < adapter.getCount(); i++) {
                         if (adapter.getItem(i).equals(transaction.getCategory())) {
                             categorySpinner.setSelection(i);
                             break;

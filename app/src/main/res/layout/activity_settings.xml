@@ -54,16 +54,17 @@
             android:layout_marginBottom="16dp">
 
             <com.google.android.material.textfield.TextInputLayout
+                android:id="@+id/newCategoryInputLayout"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
+                android:hint="새 수입 분류 추가"
                 style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox">
 
                 <com.google.android.material.textfield.TextInputEditText
                     android:id="@+id/newCategoryEditText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:hint="새 분류 추가"
                     android:inputType="text"
                     android:maxLines="1" />
 

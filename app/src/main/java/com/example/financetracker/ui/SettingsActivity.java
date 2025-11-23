@@ -14,6 +14,7 @@ import com.example.financetracker.R;
 import com.example.financetracker.utils.CategoryManager;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.textfield.TextInputEditText;
+import com.google.android.material.textfield.TextInputLayout;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -24,6 +25,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private TabLayout tabLayout;
     private RecyclerView categoryRecyclerView;
+    private TextInputLayout newCategoryInputLayout;
     private TextInputEditText newCategoryEditText;
     private Button addCategoryButton;
 
@@ -47,6 +49,7 @@ public class SettingsActivity extends AppCompatActivity {
     private void initViews() {
         tabLayout = findViewById(R.id.tabLayout);
         categoryRecyclerView = findViewById(R.id.categoryRecyclerView);
+        newCategoryInputLayout = findViewById(R.id.newCategoryInputLayout);
         newCategoryEditText = findViewById(R.id.newCategoryEditText);
         addCategoryButton = findViewById(R.id.addCategoryButton);
     }
@@ -128,9 +131,9 @@ public class SettingsActivity extends AppCompatActivity {
 
     private void updateHint() {
         if (isIncomeTab) {
-            newCategoryEditText.setHint("새 수입 분류 추가");
+            newCategoryInputLayout.setHint("새 수입 분류 추가");
         } else {
-            newCategoryEditText.setHint("새 지출 분류 추가");
+            newCategoryInputLayout.setHint("새 지출 분류 추가");
         }
     }
 

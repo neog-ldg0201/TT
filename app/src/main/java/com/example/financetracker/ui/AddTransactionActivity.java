@@ -4,6 +4,8 @@ import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
+import android.text.Editable;
+import android.text.TextWatcher;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.RadioGroup;
@@ -104,6 +106,53 @@ public class AddTransactionActivity extends AppCompatActivity {
             String type = checkedId == R.id.incomeRadio ? "INCOME" : "EXPENSE";
             updateCategorySpinner(type);
         });
+
+        // Add thousand separator to amount input
+        amountEditText.addTextChangedListener(new TextWatcher() {
+            private boolean isFormatting;
+            private String current = "";
+
+            @Override
+            public void beforeTextChanged(CharSequence s, int start, int count, int after) {}
+
+            @Override
+            public void onTextChanged(CharSequence s, int start, int before, int count) {}
+
+            @Override
+            public void afterTextChanged(Editable s) {
+                if (isFormatting) {
+                    return;
+                }
+
+                isFormatting = true;
+
+                String input = s.toString();
+                if (!input.equals(current)) {
+                    // Remove all commas
+                    String cleanString = input.replaceAll("[,]", "");
+
+                    if (cleanString.isEmpty()) {
+                        current = "";
+                        isFormatting = false;
+                        return;
+                    }
+
+                    try {
+                        // Parse and format with commas
+                        long parsed = Long.parseLong(cleanString);
+                        String formatted = String.format("%,d", parsed);
+
+                        current = formatted;
+                        amountEditText.setText(formatted);
+                        amountEditText.setSelection(formatted.length());
+                    } catch (NumberFormatException e) {
+                        // If parsing fails, keep the text as is
+                    }
+                }
+
+                isFormatting = false;
+            }
+        });
     }
 
     private String getCurrentType() {
@@ -137,7 +186,12 @@ public class AddTransactionActivity extends AppCompatActivity {
         String notificationTime = getIntent().getStringExtra("time");
 
         if (notificationAmount != null) {
-            amountEditText.setText(notificationAmount);
+            try {
+                long amount = Long.parseLong(notificationAmount);
+                amountEditText.setText(String.format("%,d", amount));
+            } catch (NumberFormatException e) {
+                amountEditText.setText(notificationAmount);
+            }
         }
         if (notificationDescription != null) {
             descriptionEditText.setText(notificationDescription);
@@ -164,7 +218,7 @@ public class AddTransactionActivity extends AppCompatActivity {
         viewModel.getTransactionById(editTransactionId, transaction -> {
             if (transaction != null) {
                 runOnUiThread(() -> {
-                    amountEditText.setText(String.valueOf(transaction.getAmount()));
+                    amountEditText.setText(String.format("%,d", transaction.getAmount()));
                     descriptionEditText.setText(transaction.getDescription());
 
                     if ("INCOME".equals(transaction.getType())) {
@@ -250,7 +304,9 @@ public class AddTransactionActivity extends AppCompatActivity {
             return;
         }
 
-        long amount = Long.parseLong(amountStr);
+        // Remove commas before parsing
+        String cleanAmountStr = amountStr.replaceAll("[,]", "");
+        long amount = Long.parseLong(cleanAmountStr);
         String type = getCurrentType();
         String description = descriptionEditText.getText().toString().trim();
 

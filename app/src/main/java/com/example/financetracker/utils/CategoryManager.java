@@ -5,16 +5,15 @@ import android.content.SharedPreferences;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
 import java.util.List;
-import java.util.Set;
 
 public class CategoryManager {
     private static final String PREFS_NAME = "category_prefs";
-    private static final String KEY_INCOME_CATEGORIES = "income_categories";
-    private static final String KEY_EXPENSE_CATEGORIES = "expense_categories";
+    private static final String KEY_INCOME_CATEGORIES = "income_categories_ordered";
+    private static final String KEY_EXPENSE_CATEGORIES = "expense_categories_ordered";
     private static final String KEY_CATEGORY_VERSION = "category_version";
-    private static final int CURRENT_CATEGORY_VERSION = 2; // 카테고리 업데이트 버전
+    private static final int CURRENT_CATEGORY_VERSION = 3; // 카테고리 업데이트 버전 (순서 보장)
+    private static final String DELIMITER = "|||"; // 카테고리 구분자
 
     private static final String[] DEFAULT_INCOME_CATEGORIES = {
             "💰 월급", "💵 부수입", "🤑 용돈", "🏅 상여", "🏦 금융소득", "기타"
@@ -45,27 +44,49 @@ public class CategoryManager {
     }
 
     public List<String> getIncomeCategories() {
-        Set<String> set = prefs.getStringSet(KEY_INCOME_CATEGORIES, null);
-        if (set == null) {
+        String saved = prefs.getString(KEY_INCOME_CATEGORIES, null);
+        if (saved == null || saved.isEmpty()) {
             return new ArrayList<>(Arrays.asList(DEFAULT_INCOME_CATEGORIES));
         }
-        return new ArrayList<>(set);
+        return stringToList(saved);
     }
 
     public List<String> getExpenseCategories() {
-        Set<String> set = prefs.getStringSet(KEY_EXPENSE_CATEGORIES, null);
-        if (set == null) {
+        String saved = prefs.getString(KEY_EXPENSE_CATEGORIES, null);
+        if (saved == null || saved.isEmpty()) {
             return new ArrayList<>(Arrays.asList(DEFAULT_EXPENSE_CATEGORIES));
         }
-        return new ArrayList<>(set);
+        return stringToList(saved);
     }
 
     public void setIncomeCategories(List<String> categories) {
-        prefs.edit().putStringSet(KEY_INCOME_CATEGORIES, new HashSet<>(categories)).apply();
+        prefs.edit().putString(KEY_INCOME_CATEGORIES, listToString(categories)).apply();
     }
 
     public void setExpenseCategories(List<String> categories) {
-        prefs.edit().putStringSet(KEY_EXPENSE_CATEGORIES, new HashSet<>(categories)).apply();
+        prefs.edit().putString(KEY_EXPENSE_CATEGORIES, listToString(categories)).apply();
+    }
+
+    private String listToString(List<String> list) {
+        if (list == null || list.isEmpty()) {
+            return "";
+        }
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < list.size(); i++) {
+            sb.append(list.get(i));
+            if (i < list.size() - 1) {
+                sb.append(DELIMITER);
+            }
+        }
+        return sb.toString();
+    }
+
+    private List<String> stringToList(String str) {
+        if (str == null || str.isEmpty()) {
+            return new ArrayList<>();
+        }
+        String[] items = str.split(DELIMITER);
+        return new ArrayList<>(Arrays.asList(items));
     }
 
     public void addIncomeCategory(String category) {

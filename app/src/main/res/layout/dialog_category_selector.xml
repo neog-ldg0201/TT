@@ -44,16 +44,16 @@
     <ScrollView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxHeight="400dp">
+        android:maxHeight="450dp">
 
         <GridLayout
             android:id="@+id/categoryGridLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:columnCount="4"
-            android:padding="16dp"
+            android:padding="8dp"
             android:alignmentMode="alignBounds"
-            android:useDefaultMargins="true"/>
+            android:useDefaultMargins="false"/>
     </ScrollView>
 
 </LinearLayout>

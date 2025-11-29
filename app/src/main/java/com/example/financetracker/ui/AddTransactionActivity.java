@@ -182,8 +182,10 @@ public class AddTransactionActivity extends AppCompatActivity {
         for (String category : categories) {
             Button categoryButton = new Button(this);
             categoryButton.setText(category);
-            categoryButton.setTextSize(14);
-            categoryButton.setPadding(16, 16, 16, 16);
+            categoryButton.setTextSize(13);
+            categoryButton.setPadding(8, 20, 8, 20);
+            categoryButton.setMinHeight(0);
+            categoryButton.setMinimumHeight(0);
 
             // Apply outlined button style
             categoryButton.setBackgroundResource(R.drawable.category_button_background);
@@ -193,7 +195,7 @@ public class AddTransactionActivity extends AppCompatActivity {
             params.width = 0;
             params.height = GridLayout.LayoutParams.WRAP_CONTENT;
             params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-            params.setMargins(8, 8, 8, 8);
+            params.setMargins(2, 2, 2, 2);
             categoryButton.setLayoutParams(params);
 
             categoryButton.setOnClickListener(v -> {

@@ -13,6 +13,8 @@ public class CategoryManager {
     private static final String PREFS_NAME = "category_prefs";
     private static final String KEY_INCOME_CATEGORIES = "income_categories";
     private static final String KEY_EXPENSE_CATEGORIES = "expense_categories";
+    private static final String KEY_CATEGORY_VERSION = "category_version";
+    private static final int CURRENT_CATEGORY_VERSION = 2; // 카테고리 업데이트 버전
 
     private static final String[] DEFAULT_INCOME_CATEGORIES = {
             "💰 월급", "💵 부수입", "🤑 용돈", "🏅 상여", "🏦 금융소득", "기타"
@@ -32,11 +34,13 @@ public class CategoryManager {
     }
 
     private void initializeDefaultCategories() {
-        if (!prefs.contains(KEY_INCOME_CATEGORIES)) {
+        int savedVersion = prefs.getInt(KEY_CATEGORY_VERSION, 0);
+
+        // 버전이 다르면 카테고리 초기화
+        if (savedVersion < CURRENT_CATEGORY_VERSION) {
             setIncomeCategories(new ArrayList<>(Arrays.asList(DEFAULT_INCOME_CATEGORIES)));
-        }
-        if (!prefs.contains(KEY_EXPENSE_CATEGORIES)) {
             setExpenseCategories(new ArrayList<>(Arrays.asList(DEFAULT_EXPENSE_CATEGORIES)));
+            prefs.edit().putInt(KEY_CATEGORY_VERSION, CURRENT_CATEGORY_VERSION).apply();
         }
     }
 

@@ -1,20 +1,22 @@
 package com.example.financetracker.ui;
 
-import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.view.Gravity;
+import android.view.View;
 import android.widget.Button;
 import android.widget.GridLayout;
+import android.widget.ImageButton;
 import android.widget.RadioGroup;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
+
+import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import com.example.financetracker.R;
 import com.example.financetracker.model.Transaction;
@@ -163,10 +165,15 @@ public class AddTransactionActivity extends AppCompatActivity {
         String type = getCurrentType();
         List<String> categories = categoryManager.getCategoriesForType(type);
 
-        // Inflate the dialog layout
-        android.view.LayoutInflater inflater = getLayoutInflater();
-        android.view.View dialogView = inflater.inflate(R.layout.dialog_category_selector, null);
-        GridLayout gridLayout = dialogView.findViewById(R.id.categoryGridLayout);
+        // Create BottomSheetDialog
+        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
+        View bottomSheetView = getLayoutInflater().inflate(R.layout.dialog_category_selector, null);
+        bottomSheetDialog.setContentView(bottomSheetView);
+
+        // Get views
+        GridLayout gridLayout = bottomSheetView.findViewById(R.id.categoryGridLayout);
+        ImageButton closeButton = bottomSheetView.findViewById(R.id.closeButton);
+        ImageButton editButton = bottomSheetView.findViewById(R.id.editCategoryButton);
 
         // Clear any existing views
         gridLayout.removeAllViews();
@@ -187,30 +194,22 @@ public class AddTransactionActivity extends AppCompatActivity {
 
             categoryButton.setOnClickListener(v -> {
                 selectedCategory = category;
-                categoryEditText.setText(category);
+                categoryEditText.setText(selectedCategory);
+                bottomSheetDialog.dismiss();
             });
 
             gridLayout.addView(categoryButton);
         }
 
-        // Show dialog
-        AlertDialog dialog = new AlertDialog.Builder(this)
-                .setTitle("분류 선택")
-                .setView(dialogView)
-                .setNegativeButton("취소", null)
-                .create();
+        // Close button listener
+        closeButton.setOnClickListener(v -> bottomSheetDialog.dismiss());
 
-        // Set click listener to dismiss dialog when category is selected
-        for (int i = 0; i < gridLayout.getChildCount(); i++) {
-            gridLayout.getChildAt(i).setOnClickListener(v -> {
-                Button btn = (Button) v;
-                selectedCategory = btn.getText().toString();
-                categoryEditText.setText(selectedCategory);
-                dialog.dismiss();
-            });
-        }
+        // Edit button listener (TODO: implement category management screen)
+        editButton.setOnClickListener(v -> {
+            Toast.makeText(this, "카테고리 편집 기능은 추후 추가 예정입니다", Toast.LENGTH_SHORT).show();
+        });
 
-        dialog.show();
+        bottomSheetDialog.show();
     }
 
     private void handleNotificationData() {

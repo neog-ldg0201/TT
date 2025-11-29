@@ -1,15 +1,16 @@
 package com.example.financetracker.ui;
 
+import android.app.AlertDialog;
 import android.app.DatePickerDialog;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
 import android.text.TextWatcher;
-import android.widget.ArrayAdapter;
+import android.view.Gravity;
 import android.widget.Button;
+import android.widget.GridLayout;
 import android.widget.RadioGroup;
-import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -32,7 +33,7 @@ public class AddTransactionActivity extends AppCompatActivity {
 
     private RadioGroup typeRadioGroup;
     private TextInputEditText amountEditText;
-    private Spinner categorySpinner;
+    private TextInputEditText categoryEditText;
     private TextInputEditText descriptionEditText;
     private TextInputEditText dateEditText;
     private TextInputEditText timeEditText;
@@ -43,6 +44,7 @@ public class AddTransactionActivity extends AppCompatActivity {
     private CategoryManager categoryManager;
     private String selectedDate;
     private String selectedTime;
+    private String selectedCategory = "";
     private boolean isFromNotification;
     private boolean isEditMode;
     private int editTransactionId = -1;
@@ -66,9 +68,6 @@ public class AddTransactionActivity extends AppCompatActivity {
         // Check if coming from notification
         isFromNotification = getIntent().getBooleanExtra("isFromNotification", false);
 
-        // Setup initial categories based on current type
-        updateCategorySpinner(getCurrentType());
-
         // Handle notification data
         handleNotificationData();
 
@@ -83,7 +82,7 @@ public class AddTransactionActivity extends AppCompatActivity {
     private void initViews() {
         typeRadioGroup = findViewById(R.id.typeRadioGroup);
         amountEditText = findViewById(R.id.amountEditText);
-        categorySpinner = findViewById(R.id.categorySpinner);
+        categoryEditText = findViewById(R.id.categoryEditText);
         descriptionEditText = findViewById(R.id.descriptionEditText);
         dateEditText = findViewById(R.id.dateEditText);
         timeEditText = findViewById(R.id.timeEditText);
@@ -96,15 +95,16 @@ public class AddTransactionActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
+        categoryEditText.setOnClickListener(v -> showCategoryPicker());
         dateEditText.setOnClickListener(v -> showDatePicker());
         timeEditText.setOnClickListener(v -> showTimePicker());
         saveButton.setOnClickListener(v -> saveTransaction());
         cancelButton.setOnClickListener(v -> navigateBack());
 
-        // Listen to type changes to update categories
+        // Listen to type changes to clear category selection
         typeRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            String type = checkedId == R.id.incomeRadio ? "INCOME" : "EXPENSE";
-            updateCategorySpinner(type);
+            selectedCategory = "";
+            categoryEditText.setText("");
         });
 
         // Add thousand separator to amount input
@@ -159,23 +159,58 @@ public class AddTransactionActivity extends AppCompatActivity {
         return typeRadioGroup.getCheckedRadioButtonId() == R.id.incomeRadio ? "INCOME" : "EXPENSE";
     }
 
-    private void updateCategorySpinner(String type) {
-        List<String> categories = new ArrayList<>();
+    private void showCategoryPicker() {
+        String type = getCurrentType();
+        List<String> categories = categoryManager.getCategoriesForType(type);
 
-        // Always add "분류 선택" as first item
-        categories.add("분류 선택");
+        // Inflate the dialog layout
+        android.view.LayoutInflater inflater = getLayoutInflater();
+        android.view.View dialogView = inflater.inflate(R.layout.dialog_category_selector, null);
+        GridLayout gridLayout = dialogView.findViewById(R.id.categoryGridLayout);
 
-        categories.addAll(categoryManager.getCategoriesForType(type));
+        // Clear any existing views
+        gridLayout.removeAllViews();
 
-        ArrayAdapter<String> adapter = new ArrayAdapter<>(this,
-                android.R.layout.simple_spinner_item, categories);
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        categorySpinner.setAdapter(adapter);
+        // Add category buttons to grid (4 columns)
+        for (String category : categories) {
+            Button categoryButton = new Button(this);
+            categoryButton.setText(category);
+            categoryButton.setTextSize(14);
+            categoryButton.setPadding(8, 8, 8, 8);
 
-        // 알림에서 온 경우 "분류 선택"으로 고정
-        if (isFromNotification) {
-            categorySpinner.setSelection(0);
+            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
+            params.width = 0;
+            params.height = GridLayout.LayoutParams.WRAP_CONTENT;
+            params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
+            params.setMargins(4, 4, 4, 4);
+            categoryButton.setLayoutParams(params);
+
+            categoryButton.setOnClickListener(v -> {
+                selectedCategory = category;
+                categoryEditText.setText(category);
+            });
+
+            gridLayout.addView(categoryButton);
         }
+
+        // Show dialog
+        AlertDialog dialog = new AlertDialog.Builder(this)
+                .setTitle("분류 선택")
+                .setView(dialogView)
+                .setNegativeButton("취소", null)
+                .create();
+
+        // Set click listener to dismiss dialog when category is selected
+        for (int i = 0; i < gridLayout.getChildCount(); i++) {
+            gridLayout.getChildAt(i).setOnClickListener(v -> {
+                Button btn = (Button) v;
+                selectedCategory = btn.getText().toString();
+                categoryEditText.setText(selectedCategory);
+                dialog.dismiss();
+            });
+        }
+
+        dialog.show();
     }
 
     private void handleNotificationData() {
@@ -202,7 +237,6 @@ public class AddTransactionActivity extends AppCompatActivity {
             } else {
                 typeRadioGroup.check(R.id.expenseRadio);
             }
-            updateCategorySpinner(notificationType);
         }
         if (notificationDate != null) {
             selectedDate = notificationDate;
@@ -229,16 +263,10 @@ public class AddTransactionActivity extends AppCompatActivity {
 
                     // Edit 모드에서는 알림 플래그 해제
                     isFromNotification = false;
-                    updateCategorySpinner(transaction.getType());
 
-                    // Set category selection (index 0 is "분류 선택", so start from 1)
-                    ArrayAdapter adapter = (ArrayAdapter) categorySpinner.getAdapter();
-                    for (int i = 1; i < adapter.getCount(); i++) {
-                        if (adapter.getItem(i).equals(transaction.getCategory())) {
-                            categorySpinner.setSelection(i);
-                            break;
-                        }
-                    }
+                    // Set category selection
+                    selectedCategory = transaction.getCategory();
+                    categoryEditText.setText(selectedCategory);
 
                     selectedDate = transaction.getDate();
                     selectedTime = transaction.getTime();
@@ -298,8 +326,7 @@ public class AddTransactionActivity extends AppCompatActivity {
             return;
         }
 
-        String category = categorySpinner.getSelectedItem().toString();
-        if ("분류 선택".equals(category)) {
+        if (selectedCategory.isEmpty()) {
             Toast.makeText(this, "분류를 선택해주세요", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -313,7 +340,7 @@ public class AddTransactionActivity extends AppCompatActivity {
         if (isEditMode && editTransactionId != -1) {
             // Update existing transaction
             Transaction transaction = new Transaction(
-                    type, amount, category, description,
+                    type, amount, selectedCategory, description,
                     selectedDate, selectedTime, false
             );
             transaction.setId(editTransactionId);
@@ -322,7 +349,7 @@ public class AddTransactionActivity extends AppCompatActivity {
         } else {
             // Insert new transaction
             Transaction transaction = new Transaction(
-                    type, amount, category, description,
+                    type, amount, selectedCategory, description,
                     selectedDate, selectedTime, isFromNotification
             );
             viewModel.insert(transaction);

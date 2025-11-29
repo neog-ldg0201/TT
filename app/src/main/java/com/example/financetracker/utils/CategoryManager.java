@@ -15,11 +15,13 @@ public class CategoryManager {
     private static final String KEY_EXPENSE_CATEGORIES = "expense_categories";
 
     private static final String[] DEFAULT_INCOME_CATEGORIES = {
-            "급여", "용돈", "이자", "부수입", "기타"
+            "💰 월급", "💵 부수입", "🤑 용돈", "🏅 상여", "🏦 금융소득", "기타"
     };
 
     private static final String[] DEFAULT_EXPENSE_CATEGORIES = {
-            "식비", "교통", "쇼핑", "여가", "공과금", "의료", "교육", "기타"
+            "🍜 식비", "✈️ 여행", "🚖 교통/차량", "🖼 문화생활",
+            "🛒 마트/편의점", "🧥 패션/미용", "📌 고정지출", "🏠 주거/통신",
+            "📙 교육", "🎁 경조사/회비/선물", "🎫 복권", "💰 저축", "기타"
     };
 
     private final SharedPreferences prefs;

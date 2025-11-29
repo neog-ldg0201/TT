@@ -6,13 +6,14 @@ import android.content.SharedPreferences;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Pattern;
 
 public class CategoryManager {
     private static final String PREFS_NAME = "category_prefs";
     private static final String KEY_INCOME_CATEGORIES = "income_categories_ordered";
     private static final String KEY_EXPENSE_CATEGORIES = "expense_categories_ordered";
     private static final String KEY_CATEGORY_VERSION = "category_version";
-    private static final int CURRENT_CATEGORY_VERSION = 3; // 카테고리 업데이트 버전 (순서 보장)
+    private static final int CURRENT_CATEGORY_VERSION = 4; // 카테고리 업데이트 버전 (split 정규식 수정)
     private static final String DELIMITER = "|||"; // 카테고리 구분자
 
     private static final String[] DEFAULT_INCOME_CATEGORIES = {
@@ -85,7 +86,8 @@ public class CategoryManager {
         if (str == null || str.isEmpty()) {
             return new ArrayList<>();
         }
-        String[] items = str.split(DELIMITER);
+        // Use Pattern.quote to escape regex special characters in DELIMITER
+        String[] items = str.split(Pattern.quote(DELIMITER));
         return new ArrayList<>(Arrays.asList(items));
     }
 

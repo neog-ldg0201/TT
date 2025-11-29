@@ -5,6 +5,7 @@ import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
+import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
 import android.widget.Button;
@@ -182,10 +183,15 @@ public class AddTransactionActivity extends AppCompatActivity {
         for (String category : categories) {
             Button categoryButton = new Button(this);
             categoryButton.setText(category);
-            categoryButton.setTextSize(13);
-            categoryButton.setPadding(8, 20, 8, 20);
+            categoryButton.setTextSize(12);
+            categoryButton.setPadding(4, 24, 4, 24);
             categoryButton.setMinHeight(0);
             categoryButton.setMinimumHeight(0);
+
+            // Prevent text wrapping
+            categoryButton.setSingleLine(true);
+            categoryButton.setMaxLines(1);
+            categoryButton.setEllipsize(TextUtils.TruncateAt.END);
 
             // Apply outlined button style
             categoryButton.setBackgroundResource(R.drawable.category_button_background);

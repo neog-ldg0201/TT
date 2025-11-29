@@ -5,19 +5,17 @@ import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.text.Editable;
-import android.text.TextUtils;
 import android.text.TextWatcher;
 import android.view.View;
+import android.widget.AdapterView;
+import android.widget.ArrayAdapter;
 import android.widget.Button;
-import android.widget.GridLayout;
-import android.widget.ImageButton;
 import android.widget.RadioGroup;
+import android.widget.Spinner;
 import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.lifecycle.ViewModelProvider;
-
-import com.google.android.material.bottomsheet.BottomSheetDialog;
 
 import com.example.financetracker.R;
 import com.example.financetracker.model.Transaction;
@@ -36,7 +34,7 @@ public class AddTransactionActivity extends AppCompatActivity {
 
     private RadioGroup typeRadioGroup;
     private TextInputEditText amountEditText;
-    private TextInputEditText categoryEditText;
+    private Spinner categorySpinner;
     private TextInputEditText descriptionEditText;
     private TextInputEditText dateEditText;
     private TextInputEditText timeEditText;
@@ -62,6 +60,7 @@ public class AddTransactionActivity extends AppCompatActivity {
         initViews();
         setupViewModel();
         setupListeners();
+        setupCategorySpinner();
         initializeDateTime();
 
         // Check if edit mode
@@ -85,7 +84,7 @@ public class AddTransactionActivity extends AppCompatActivity {
     private void initViews() {
         typeRadioGroup = findViewById(R.id.typeRadioGroup);
         amountEditText = findViewById(R.id.amountEditText);
-        categoryEditText = findViewById(R.id.categoryEditText);
+        categorySpinner = findViewById(R.id.categorySpinner);
         descriptionEditText = findViewById(R.id.descriptionEditText);
         dateEditText = findViewById(R.id.dateEditText);
         timeEditText = findViewById(R.id.timeEditText);
@@ -98,16 +97,27 @@ public class AddTransactionActivity extends AppCompatActivity {
     }
 
     private void setupListeners() {
-        categoryEditText.setOnClickListener(v -> showCategoryPicker());
         dateEditText.setOnClickListener(v -> showDatePicker());
         timeEditText.setOnClickListener(v -> showTimePicker());
         saveButton.setOnClickListener(v -> saveTransaction());
         cancelButton.setOnClickListener(v -> navigateBack());
 
-        // Listen to type changes to clear category selection
+        // Listen to type changes to update category list
         typeRadioGroup.setOnCheckedChangeListener((group, checkedId) -> {
-            selectedCategory = "";
-            categoryEditText.setText("");
+            setupCategorySpinner();
+        });
+
+        // Listen to category selection
+        categorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
+            @Override
+            public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
+                selectedCategory = parent.getItemAtPosition(position).toString();
+            }
+
+            @Override
+            public void onNothingSelected(AdapterView<?> parent) {
+                selectedCategory = "";
+            }
         });
 
         // Add thousand separator to amount input
@@ -162,68 +172,25 @@ public class AddTransactionActivity extends AppCompatActivity {
         return typeRadioGroup.getCheckedRadioButtonId() == R.id.incomeRadio ? "INCOME" : "EXPENSE";
     }
 
-    private void showCategoryPicker() {
+    private void setupCategorySpinner() {
         String type = getCurrentType();
         List<String> categories = categoryManager.getCategoriesForType(type);
 
-        // Create BottomSheetDialog
-        BottomSheetDialog bottomSheetDialog = new BottomSheetDialog(this);
-        View bottomSheetView = getLayoutInflater().inflate(R.layout.dialog_category_selector, null);
-        bottomSheetDialog.setContentView(bottomSheetView);
+        ArrayAdapter<String> adapter = new ArrayAdapter<>(
+                this,
+                android.R.layout.simple_spinner_item,
+                categories
+        );
+        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
+        categorySpinner.setAdapter(adapter);
 
-        // Get views
-        GridLayout gridLayout = bottomSheetView.findViewById(R.id.categoryGridLayout);
-        ImageButton closeButton = bottomSheetView.findViewById(R.id.closeButton);
-        ImageButton editButton = bottomSheetView.findViewById(R.id.editCategoryButton);
-
-        // Clear any existing views
-        gridLayout.removeAllViews();
-
-        // Add category buttons to grid (4 columns)
-        for (String category : categories) {
-            Button categoryButton = new Button(this);
-            categoryButton.setText(category);
-            categoryButton.setTextSize(12);
-            categoryButton.setPadding(4, 24, 4, 24);
-            categoryButton.setMinHeight(0);
-            categoryButton.setMinimumHeight(0);
-
-            // Prevent text wrapping
-            categoryButton.setSingleLine(true);
-            categoryButton.setMaxLines(1);
-            categoryButton.setEllipsize(TextUtils.TruncateAt.END);
-
-            // Apply outlined button style
-            categoryButton.setBackgroundResource(R.drawable.category_button_background);
-            categoryButton.setTextColor(getResources().getColor(R.color.text_primary, getTheme()));
-
-            GridLayout.LayoutParams params = new GridLayout.LayoutParams();
-            params.width = 0;
-            params.height = GridLayout.LayoutParams.WRAP_CONTENT;
-            params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-            params.setMargins(2, 2, 2, 2);
-            categoryButton.setLayoutParams(params);
-
-            categoryButton.setOnClickListener(v -> {
-                selectedCategory = category;
-                categoryEditText.setText(selectedCategory);
-                bottomSheetDialog.dismiss();
-            });
-
-            gridLayout.addView(categoryButton);
+        // Reset selection
+        if (!categories.isEmpty()) {
+            categorySpinner.setSelection(0);
+            selectedCategory = categories.get(0);
+        } else {
+            selectedCategory = "";
         }
-
-        // Close button listener
-        closeButton.setOnClickListener(v -> bottomSheetDialog.dismiss());
-
-        // Edit button listener - go to SettingsActivity
-        editButton.setOnClickListener(v -> {
-            bottomSheetDialog.dismiss();
-            Intent intent = new Intent(this, SettingsActivity.class);
-            startActivity(intent);
-        });
-
-        bottomSheetDialog.show();
     }
 
     private void handleNotificationData() {
@@ -279,7 +246,15 @@ public class AddTransactionActivity extends AppCompatActivity {
 
                     // Set category selection
                     selectedCategory = transaction.getCategory();
-                    categoryEditText.setText(selectedCategory);
+                    setupCategorySpinner();
+
+                    // Find and select the category in spinner
+                    String type = getCurrentType();
+                    List<String> categories = categoryManager.getCategoriesForType(type);
+                    int categoryIndex = categories.indexOf(selectedCategory);
+                    if (categoryIndex >= 0) {
+                        categorySpinner.setSelection(categoryIndex);
+                    }
 
                     selectedDate = transaction.getDate();
                     selectedTime = transaction.getTime();

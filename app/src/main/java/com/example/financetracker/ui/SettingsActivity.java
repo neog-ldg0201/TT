@@ -4,9 +4,11 @@ import android.os.Bundle;
 import android.widget.Button;
 import android.widget.Toast;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AlertDialog;
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.recyclerview.widget.ItemTouchHelper;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -31,6 +33,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private CategoryAdapter categoryAdapter;
     private boolean isIncomeTab = true; // 현재 수입 탭인지 여부
+    private ItemTouchHelper itemTouchHelper;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -90,8 +93,36 @@ public class SettingsActivity extends AppCompatActivity {
         categoryAdapter = new CategoryAdapter(categories, (category, position) -> {
             showDeleteConfirmDialog(category, position);
         });
+
+        // Set move listener to save order when categories are reordered
+        categoryAdapter.setMoveListener((fromPosition, toPosition) -> {
+            saveCategoryOrder();
+        });
+
         categoryRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         categoryRecyclerView.setAdapter(categoryAdapter);
+
+        // Setup drag and drop
+        ItemTouchHelper.Callback callback = new ItemTouchHelper.SimpleCallback(
+                ItemTouchHelper.UP | ItemTouchHelper.DOWN, 0) {
+            @Override
+            public boolean onMove(@NonNull RecyclerView recyclerView,
+                                  @NonNull RecyclerView.ViewHolder viewHolder,
+                                  @NonNull RecyclerView.ViewHolder target) {
+                int fromPosition = viewHolder.getAdapterPosition();
+                int toPosition = target.getAdapterPosition();
+                categoryAdapter.moveItem(fromPosition, toPosition);
+                return true;
+            }
+
+            @Override
+            public void onSwiped(@NonNull RecyclerView.ViewHolder viewHolder, int direction) {
+                // Not used
+            }
+        };
+
+        itemTouchHelper = new ItemTouchHelper(callback);
+        itemTouchHelper.attachToRecyclerView(categoryRecyclerView);
     }
 
     private void setupButtons() {
@@ -152,5 +183,14 @@ public class SettingsActivity extends AppCompatActivity {
                 })
                 .setNegativeButton("취소", null)
                 .show();
+    }
+
+    private void saveCategoryOrder() {
+        List<String> currentCategories = categoryAdapter.getCategories();
+        if (isIncomeTab) {
+            categoryManager.setIncomeCategories(currentCategories);
+        } else {
+            categoryManager.setExpenseCategories(currentCategories);
+        }
     }
 }

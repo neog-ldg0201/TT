@@ -183,13 +183,17 @@ public class AddTransactionActivity extends AppCompatActivity {
             Button categoryButton = new Button(this);
             categoryButton.setText(category);
             categoryButton.setTextSize(14);
-            categoryButton.setPadding(8, 8, 8, 8);
+            categoryButton.setPadding(16, 16, 16, 16);
+
+            // Apply outlined button style
+            categoryButton.setBackgroundResource(R.drawable.category_button_background);
+            categoryButton.setTextColor(getResources().getColor(R.color.text_primary, getTheme()));
 
             GridLayout.LayoutParams params = new GridLayout.LayoutParams();
             params.width = 0;
             params.height = GridLayout.LayoutParams.WRAP_CONTENT;
             params.columnSpec = GridLayout.spec(GridLayout.UNDEFINED, 1f);
-            params.setMargins(4, 4, 4, 4);
+            params.setMargins(8, 8, 8, 8);
             categoryButton.setLayoutParams(params);
 
             categoryButton.setOnClickListener(v -> {
@@ -204,9 +208,11 @@ public class AddTransactionActivity extends AppCompatActivity {
         // Close button listener
         closeButton.setOnClickListener(v -> bottomSheetDialog.dismiss());
 
-        // Edit button listener (TODO: implement category management screen)
+        // Edit button listener - go to SettingsActivity
         editButton.setOnClickListener(v -> {
-            Toast.makeText(this, "카테고리 편집 기능은 추후 추가 예정입니다", Toast.LENGTH_SHORT).show();
+            bottomSheetDialog.dismiss();
+            Intent intent = new Intent(this, SettingsActivity.class);
+            startActivity(intent);
         });
 
         bottomSheetDialog.show();

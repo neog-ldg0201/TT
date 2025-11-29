@@ -13,6 +13,9 @@ import android.util.Log;
 import androidx.core.app.NotificationCompat;
 
 import com.example.financetracker.R;
+import com.example.financetracker.data.NotificationHistoryDao;
+import com.example.financetracker.database.AppDatabase;
+import com.example.financetracker.model.NotificationHistory;
 import com.example.financetracker.ui.AddTransactionActivity;
 import com.example.financetracker.utils.DateUtils;
 import com.example.financetracker.utils.TossNotificationParser;
@@ -75,6 +78,21 @@ public class TossNotificationListenerService extends NotificationListenerService
         String amount = data.get("amount");
         String description = data.get("description");
         String type = data.get("type"); // "INCOME" or "EXPENSE"
+
+        // Save to notification history
+        String currentDate = DateUtils.getCurrentDate();
+        String currentTime = DateUtils.getCurrentTime();
+        long timestamp = System.currentTimeMillis();
+
+        NotificationHistory notificationHistory = new NotificationHistory(
+                amount, description, type, currentDate, currentTime, timestamp
+        );
+
+        new Thread(() -> {
+            NotificationHistoryDao dao = AppDatabase.getInstance(this).notificationHistoryDao();
+            dao.insert(notificationHistory);
+            Log.d(TAG, "Notification saved to history");
+        }).start();
 
         // Format amount with commas for display
         String formattedAmount = formatAmount(amount);

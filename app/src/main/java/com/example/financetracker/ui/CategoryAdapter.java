@@ -4,6 +4,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageButton;
+import android.widget.ImageView;
 import android.widget.TextView;
 
 import androidx.annotation.NonNull;
@@ -11,6 +12,7 @@ import androidx.recyclerview.widget.RecyclerView;
 
 import com.example.financetracker.R;
 
+import java.util.Collections;
 import java.util.List;
 
 public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHolder> {
@@ -22,9 +24,19 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
         void onDelete(String category, int position);
     }
 
+    public interface OnCategoryMoveListener {
+        void onMove(int fromPosition, int toPosition);
+    }
+
+    private OnCategoryMoveListener moveListener;
+
     public CategoryAdapter(List<String> categories, OnCategoryDeleteListener deleteListener) {
         this.categories = categories;
         this.deleteListener = deleteListener;
+    }
+
+    public void setMoveListener(OnCategoryMoveListener moveListener) {
+        this.moveListener = moveListener;
     }
 
     @NonNull
@@ -63,14 +75,30 @@ public class CategoryAdapter extends RecyclerView.Adapter<CategoryAdapter.ViewHo
         }
     }
 
+    public void moveItem(int fromPosition, int toPosition) {
+        if (categories != null && fromPosition < categories.size() && toPosition < categories.size()) {
+            Collections.swap(categories, fromPosition, toPosition);
+            notifyItemMoved(fromPosition, toPosition);
+            if (moveListener != null) {
+                moveListener.onMove(fromPosition, toPosition);
+            }
+        }
+    }
+
+    public List<String> getCategories() {
+        return categories;
+    }
+
     static class ViewHolder extends RecyclerView.ViewHolder {
         TextView categoryNameText;
         ImageButton deleteCategoryButton;
+        ImageView dragHandle;
 
         ViewHolder(View itemView) {
             super(itemView);
             categoryNameText = itemView.findViewById(R.id.categoryNameText);
             deleteCategoryButton = itemView.findViewById(R.id.deleteCategoryButton);
+            dragHandle = itemView.findViewById(R.id.dragHandle);
         }
     }
 }

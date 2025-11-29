@@ -181,18 +181,6 @@
 
     </androidx.core.widget.NestedScrollView>
 
-    <!-- Test Button (Left Bottom) -->
-    <com.google.android.material.floatingactionbutton.FloatingActionButton
-        android:id="@+id/fabTest"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_gravity="bottom|start"
-        android:layout_margin="16dp"
-        android:src="@android:drawable/ic_menu_send"
-        android:contentDescription="테스트 알림"
-        app:backgroundTint="@color/text_secondary"
-        app:tint="@color/white"/>
-
     <!-- Floating Action Button -->
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/fabAddTransaction"

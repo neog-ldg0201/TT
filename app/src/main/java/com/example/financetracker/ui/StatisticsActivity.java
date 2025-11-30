@@ -83,6 +83,7 @@ public class StatisticsActivity extends AppCompatActivity {
         setupPieChart();
         setupRecyclerView();
         setupListeners();
+        updateTypeText();
         updateStatistics();
     }
 
@@ -290,7 +291,13 @@ public class StatisticsActivity extends AppCompatActivity {
                 end.set(Calendar.DAY_OF_YEAR, end.getActualMaximum(Calendar.DAY_OF_YEAR));
                 break;
             case "custom":
-                return new String[]{customStartDate, customEndDate};
+                if (customStartDate != null && customEndDate != null) {
+                    return new String[]{customStartDate, customEndDate};
+                }
+                // Fallback to current month if custom dates not set
+                start.set(Calendar.DAY_OF_MONTH, 1);
+                end.set(Calendar.DAY_OF_MONTH, end.getActualMaximum(Calendar.DAY_OF_MONTH));
+                break;
         }
 
         return new String[]{sdf.format(start.getTime()), sdf.format(end.getTime())};
@@ -312,7 +319,11 @@ public class StatisticsActivity extends AppCompatActivity {
                 periodText.setText(String.format("%d년", currentCalendar.get(Calendar.YEAR)));
                 break;
             case "custom":
-                periodText.setText(String.format("%s ~ %s", startDate, endDate));
+                if (startDate != null && endDate != null) {
+                    periodText.setText(String.format("%s ~ %s", startDate, endDate));
+                } else {
+                    periodText.setText("사용자 지정 기간");
+                }
                 break;
         }
     }

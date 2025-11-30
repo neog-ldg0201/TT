@@ -1,6 +1,5 @@
 package com.example.financetracker.ui;
 
-import android.app.DatePickerDialog;
 import android.graphics.Color;
 import android.os.Bundle;
 import android.view.View;
@@ -10,6 +9,7 @@ import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
+import androidx.core.util.Pair;
 import androidx.recyclerview.widget.LinearLayoutManager;
 import androidx.recyclerview.widget.RecyclerView;
 
@@ -23,6 +23,7 @@ import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
 import com.github.mikephil.charting.formatter.PercentFormatter;
+import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.tabs.TabLayout;
 
 import java.text.NumberFormat;
@@ -31,6 +32,7 @@ import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.List;
 import java.util.Locale;
+import java.util.TimeZone;
 
 public class StatisticsActivity extends AppCompatActivity {
 
@@ -52,7 +54,7 @@ public class StatisticsActivity extends AppCompatActivity {
     private TransactionDao transactionDao;
 
     private String periodType = "monthly"; // weekly, monthly, yearly, custom
-    private String transactionType = "EXPENSE"; // INCOME or EXPENSE
+    private String transactionType = "INCOME"; // INCOME or EXPENSE
     private Calendar currentCalendar;
     private String customStartDate;
     private String customEndDate;
@@ -219,21 +221,33 @@ public class StatisticsActivity extends AppCompatActivity {
     }
 
     private void showCustomDatePicker() {
-        Calendar calendar = Calendar.getInstance();
+        // Build Material Date Range Picker
+        MaterialDatePicker<Pair<Long, Long>> dateRangePicker = MaterialDatePicker.Builder.dateRangePicker()
+                .setTitleText("기간 선택")
+                .setSelection(
+                        new Pair<>(
+                                MaterialDatePicker.todayInUtcMilliseconds(),
+                                MaterialDatePicker.todayInUtcMilliseconds()
+                        )
+                )
+                .build();
 
-        // Start date picker
-        new DatePickerDialog(this, (view, year, month, dayOfMonth) -> {
-            customStartDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", year, month + 1, dayOfMonth);
+        dateRangePicker.addOnPositiveButtonClickListener(selection -> {
+            if (selection != null && selection.first != null && selection.second != null) {
+                // Convert milliseconds to date strings
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 
-            // End date picker
-            new DatePickerDialog(this, (view2, year2, month2, dayOfMonth2) -> {
-                customEndDate = String.format(Locale.getDefault(), "%04d-%02d-%02d", year2, month2 + 1, dayOfMonth2);
+                customStartDate = sdf.format(selection.first);
+                customEndDate = sdf.format(selection.second);
+
                 periodType = "custom";
                 updateButtonStates();
                 updateStatistics();
-            }, year, month, dayOfMonth).show();
+            }
+        });
 
-        }, calendar.get(Calendar.YEAR), calendar.get(Calendar.MONTH), calendar.get(Calendar.DAY_OF_MONTH)).show();
+        dateRangePicker.show(getSupportFragmentManager(), "DATE_RANGE_PICKER");
     }
 
     private void updateStatistics() {
@@ -322,7 +336,7 @@ public class StatisticsActivity extends AppCompatActivity {
                 if (startDate != null && endDate != null) {
                     periodText.setText(String.format("%s ~ %s", startDate, endDate));
                 } else {
-                    periodText.setText("사용자 지정 기간");
+                    periodText.setText("기타");
                 }
                 break;
         }

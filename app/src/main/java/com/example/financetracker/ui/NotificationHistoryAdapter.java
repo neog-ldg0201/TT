@@ -19,14 +19,22 @@ import java.util.Locale;
 public class NotificationHistoryAdapter extends RecyclerView.Adapter<NotificationHistoryAdapter.ViewHolder> {
 
     private List<NotificationHistory> notifications;
+    private final OnNotificationClickListener clickListener;
     private final OnNotificationDeleteListener deleteListener;
+
+    public interface OnNotificationClickListener {
+        void onClick(NotificationHistory notification);
+    }
 
     public interface OnNotificationDeleteListener {
         void onDelete(NotificationHistory notification);
     }
 
-    public NotificationHistoryAdapter(List<NotificationHistory> notifications, OnNotificationDeleteListener deleteListener) {
+    public NotificationHistoryAdapter(List<NotificationHistory> notifications,
+                                     OnNotificationClickListener clickListener,
+                                     OnNotificationDeleteListener deleteListener) {
         this.notifications = notifications;
+        this.clickListener = clickListener;
         this.deleteListener = deleteListener;
     }
 
@@ -54,6 +62,13 @@ public class NotificationHistoryAdapter extends RecyclerView.Adapter<Notificatio
 
         holder.descriptionText.setText(notification.getDescription());
         holder.dateTimeText.setText(notification.getDate() + " " + notification.getTime());
+
+        // Click on the item to navigate to AddTransactionActivity
+        holder.itemView.setOnClickListener(v -> {
+            if (clickListener != null) {
+                clickListener.onClick(notification);
+            }
+        });
 
         holder.deleteButton.setOnClickListener(v -> {
             if (deleteListener != null) {

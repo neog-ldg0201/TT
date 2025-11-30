@@ -1,5 +1,6 @@
 package com.example.financetracker.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.widget.Toast;
 
@@ -51,11 +52,29 @@ public class NotificationHistoryActivity extends AppCompatActivity {
     }
 
     private void setupRecyclerView() {
-        adapter = new NotificationHistoryAdapter(new ArrayList<>(), notification -> {
-            showDeleteConfirmDialog(notification);
-        });
+        adapter = new NotificationHistoryAdapter(
+                new ArrayList<>(),
+                notification -> {
+                    // Click listener - navigate to AddTransactionActivity
+                    navigateToAddTransaction(notification);
+                },
+                notification -> {
+                    // Delete listener
+                    showDeleteConfirmDialog(notification);
+                }
+        );
         notificationRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         notificationRecyclerView.setAdapter(adapter);
+    }
+
+    private void navigateToAddTransaction(NotificationHistory notification) {
+        Intent intent = new Intent(this, AddTransactionActivity.class);
+        intent.putExtra("amount", notification.getAmount());
+        intent.putExtra("description", notification.getDescription());
+        intent.putExtra("type", notification.getType());
+        intent.putExtra("date", notification.getDate());
+        intent.putExtra("time", notification.getTime());
+        startActivity(intent);
     }
 
     private void loadNotifications() {

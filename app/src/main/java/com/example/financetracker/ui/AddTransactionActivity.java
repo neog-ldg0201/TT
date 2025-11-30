@@ -111,7 +111,12 @@ public class AddTransactionActivity extends AppCompatActivity {
         categorySpinner.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
             @Override
             public void onItemSelected(AdapterView<?> parent, View view, int position, long id) {
-                selectedCategory = parent.getItemAtPosition(position).toString();
+                String selected = parent.getItemAtPosition(position).toString();
+                if ("선택".equals(selected)) {
+                    selectedCategory = "";
+                } else {
+                    selectedCategory = selected;
+                }
             }
 
             @Override
@@ -176,21 +181,22 @@ public class AddTransactionActivity extends AppCompatActivity {
         String type = getCurrentType();
         List<String> categories = categoryManager.getCategoriesForType(type);
 
+        // Add "선택" as first item
+        List<String> categoriesWithSelect = new ArrayList<>();
+        categoriesWithSelect.add("선택");
+        categoriesWithSelect.addAll(categories);
+
         ArrayAdapter<String> adapter = new ArrayAdapter<>(
                 this,
                 R.layout.spinner_item,
-                categories
+                categoriesWithSelect
         );
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         categorySpinner.setAdapter(adapter);
 
-        // Reset selection
-        if (!categories.isEmpty()) {
-            categorySpinner.setSelection(0);
-            selectedCategory = categories.get(0);
-        } else {
-            selectedCategory = "";
-        }
+        // Reset selection to "선택"
+        categorySpinner.setSelection(0);
+        selectedCategory = "";
     }
 
     private void handleNotificationData() {
@@ -248,12 +254,12 @@ public class AddTransactionActivity extends AppCompatActivity {
                     selectedCategory = transaction.getCategory();
                     setupCategorySpinner();
 
-                    // Find and select the category in spinner
+                    // Find and select the category in spinner (+1 for "선택" at index 0)
                     String type = getCurrentType();
                     List<String> categories = categoryManager.getCategoriesForType(type);
                     int categoryIndex = categories.indexOf(selectedCategory);
                     if (categoryIndex >= 0) {
-                        categorySpinner.setSelection(categoryIndex);
+                        categorySpinner.setSelection(categoryIndex + 1);
                     }
 
                     selectedDate = transaction.getDate();

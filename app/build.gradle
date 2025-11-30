@@ -46,6 +46,9 @@ dependencies {
     implementation 'androidx.lifecycle:lifecycle-viewmodel:2.6.2'
     implementation 'androidx.lifecycle:lifecycle-livedata:2.6.2'
 
+    // Chart library
+    implementation 'com.github.PhilJay:MPAndroidChart:v3.1.0'
+
     // Testing
     testImplementation 'junit:junit:4.13.2'
     androidTestImplementation 'androidx.test.ext:junit:1.1.5'

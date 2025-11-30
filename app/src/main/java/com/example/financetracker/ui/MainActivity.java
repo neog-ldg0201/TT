@@ -138,6 +138,10 @@ public class MainActivity extends AppCompatActivity {
             Intent intent = new Intent(this, NotificationHistoryActivity.class);
             startActivity(intent);
             return true;
+        } else if (itemId == R.id.action_statistics) {
+            Intent intent = new Intent(this, StatisticsActivity.class);
+            startActivity(intent);
+            return true;
         }
         return super.onOptionsItemSelected(item);
     }

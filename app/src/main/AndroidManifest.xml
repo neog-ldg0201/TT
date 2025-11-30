@@ -53,6 +53,13 @@
             android:parentActivityName=".ui.MainActivity"
             android:theme="@style/Theme.FinanceTracker.NoActionBar" />
 
+        <!-- Statistics Activity -->
+        <activity
+            android:name=".ui.StatisticsActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity"
+            android:theme="@style/Theme.FinanceTracker.NoActionBar" />
+
         <!-- Notification Listener Service -->
         <service
             android:name=".service.TossNotificationListenerService"

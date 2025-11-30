@@ -45,4 +45,15 @@ public interface TransactionDao {
 
     @Query("SELECT * FROM transactions WHERE id = :id")
     Transaction getTransactionById(int id);
+
+    @Query("SELECT category, SUM(amount) as totalAmount FROM transactions WHERE type = 'EXPENSE' AND date BETWEEN :startDate AND :endDate GROUP BY category ORDER BY totalAmount DESC")
+    List<CategoryAmount> getExpenseCategoryStatistics(String startDate, String endDate);
+
+    @Query("SELECT category, SUM(amount) as totalAmount FROM transactions WHERE type = 'INCOME' AND date BETWEEN :startDate AND :endDate GROUP BY category ORDER BY totalAmount DESC")
+    List<CategoryAmount> getIncomeCategoryStatistics(String startDate, String endDate);
+
+    class CategoryAmount {
+        public String category;
+        public long totalAmount;
+    }
 }

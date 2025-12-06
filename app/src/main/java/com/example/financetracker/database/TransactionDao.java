@@ -46,6 +46,15 @@ public interface TransactionDao {
     @Query("SELECT * FROM transactions WHERE id = :id")
     Transaction getTransactionById(int id);
 
+    @Query("SELECT * FROM transactions ORDER BY date DESC, time DESC")
+    List<Transaction> getAllTransactionsSync();
+
+    @Insert
+    long insertSync(Transaction transaction);
+
+    @Query("DELETE FROM transactions")
+    void deleteAll();
+
     @Query("SELECT category, SUM(amount) as totalAmount FROM transactions WHERE type = 'EXPENSE' AND date BETWEEN :startDate AND :endDate GROUP BY category ORDER BY totalAmount DESC")
     List<CategoryAmount> getExpenseCategoryStatistics(String startDate, String endDate);
 

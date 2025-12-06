@@ -33,9 +33,7 @@ public class TossNotificationListenerService extends NotificationListenerService
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "TossNotificationListenerService created");
-        }
+        Log.d(TAG, "TossNotificationListenerService created");
     }
 
     @Override
@@ -47,9 +45,7 @@ public class TossNotificationListenerService extends NotificationListenerService
             return;
         }
 
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "Toss notification detected");
-        }
+        Log.d(TAG, "Toss notification detected");
 
         Notification notification = sbn.getNotification();
         if (notification == null) {
@@ -67,10 +63,8 @@ public class TossNotificationListenerService extends NotificationListenerService
         String titleStr = title.toString();
         String textStr = text.toString();
 
-        if (BuildConfig.DEBUG) {
-            Log.d(TAG, "Title: " + titleStr);
-            Log.d(TAG, "Text: " + textStr);
-        }
+        Log.d(TAG, "Title: " + titleStr);
+        Log.d(TAG, "Text: " + textStr);
 
         // Parse notification content
         Map<String, String> parsedData = TossNotificationParser.parse(titleStr, textStr);
@@ -97,9 +91,7 @@ public class TossNotificationListenerService extends NotificationListenerService
         new Thread(() -> {
             NotificationHistoryDao dao = AppDatabase.getInstance(this).notificationHistoryDao();
             dao.insert(notificationHistory);
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "Notification saved to history");
-            }
+            Log.d(TAG, "Notification saved to history");
         }).start();
 
         // Format amount with commas for display
@@ -144,9 +136,7 @@ public class TossNotificationListenerService extends NotificationListenerService
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
         if (notificationManager != null) {
             notificationManager.notify(notificationId, builder.build());
-            if (BuildConfig.DEBUG) {
-                Log.d(TAG, "Transaction notification shown - Amount: " + amount + ", Type: " + type + ", ID: " + notificationId);
-            }
+            Log.d(TAG, "Transaction notification shown - Amount: " + amount + ", Type: " + type + ", ID: " + notificationId);
         }
     }
 

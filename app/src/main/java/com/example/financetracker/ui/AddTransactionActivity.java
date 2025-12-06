@@ -261,8 +261,10 @@ public class AddTransactionActivity extends AppCompatActivity {
                     } else {
                         typeRadioGroup.check(R.id.expenseRadio);
                     }
-                    // setupCategorySpinner() is called automatically by typeRadioGroup listener
-                    // and it will auto-select the category based on selectedCategory
+
+                    // Explicitly call setupCategorySpinner to ensure category is selected
+                    // (listener may not be called if the type is already selected)
+                    setupCategorySpinner();
 
                     // Edit 모드에서는 알림 플래그 해제
                     isFromNotification = false;

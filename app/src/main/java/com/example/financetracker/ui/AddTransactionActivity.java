@@ -194,9 +194,21 @@ public class AddTransactionActivity extends AppCompatActivity {
         adapter.setDropDownViewResource(R.layout.spinner_dropdown_item);
         categorySpinner.setAdapter(adapter);
 
-        // Reset selection to "선택"
-        categorySpinner.setSelection(0);
-        selectedCategory = "";
+        // If selectedCategory exists in new list, keep it selected
+        if (selectedCategory != null && !selectedCategory.isEmpty()) {
+            int categoryIndex = categories.indexOf(selectedCategory);
+            if (categoryIndex >= 0) {
+                categorySpinner.setSelection(categoryIndex + 1); // +1 for "선택"
+            } else {
+                // Category doesn't exist in new type, reset
+                categorySpinner.setSelection(0);
+                selectedCategory = "";
+            }
+        } else {
+            // Reset selection to "선택"
+            categorySpinner.setSelection(0);
+            selectedCategory = "";
+        }
     }
 
     private void handleNotificationData() {
@@ -241,26 +253,19 @@ public class AddTransactionActivity extends AppCompatActivity {
                     amountEditText.setText(String.format("%,d", transaction.getAmount()));
                     descriptionEditText.setText(transaction.getDescription());
 
+                    // Set category BEFORE changing type to preserve it
+                    selectedCategory = transaction.getCategory();
+
                     if ("INCOME".equals(transaction.getType())) {
                         typeRadioGroup.check(R.id.incomeRadio);
                     } else {
                         typeRadioGroup.check(R.id.expenseRadio);
                     }
+                    // setupCategorySpinner() is called automatically by typeRadioGroup listener
+                    // and it will auto-select the category based on selectedCategory
 
                     // Edit 모드에서는 알림 플래그 해제
                     isFromNotification = false;
-
-                    // Set category selection
-                    selectedCategory = transaction.getCategory();
-                    setupCategorySpinner();
-
-                    // Find and select the category in spinner (+1 for "선택" at index 0)
-                    String type = getCurrentType();
-                    List<String> categories = categoryManager.getCategoriesForType(type);
-                    int categoryIndex = categories.indexOf(selectedCategory);
-                    if (categoryIndex >= 0) {
-                        categorySpinner.setSelection(categoryIndex + 1);
-                    }
 
                     selectedDate = transaction.getDate();
                     selectedTime = transaction.getTime();

@@ -20,20 +20,20 @@
             android:layout_marginBottom="16dp">
 
             <RadioButton
-                android:id="@+id/incomeRadio"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="@string/income"
-                android:textSize="16sp"
-                android:checked="true"/>
-
-            <RadioButton
                 android:id="@+id/expenseRadio"
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
                 android:text="@string/expense"
+                android:textSize="16sp"
+                android:checked="true"/>
+
+            <RadioButton
+                android:id="@+id/incomeRadio"
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:text="@string/income"
                 android:textSize="16sp"/>
         </RadioGroup>
 

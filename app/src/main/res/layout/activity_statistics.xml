@@ -122,10 +122,10 @@
                 app:tabGravity="fill">
 
                 <com.google.android.material.tabs.TabItem
-                    android:text="수입" />
+                    android:text="지출" />
 
                 <com.google.android.material.tabs.TabItem
-                    android:text="지출" />
+                    android:text="수입" />
 
             </com.google.android.material.tabs.TabLayout>
 

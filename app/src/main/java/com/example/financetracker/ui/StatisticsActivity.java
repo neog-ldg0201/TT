@@ -54,7 +54,7 @@ public class StatisticsActivity extends AppCompatActivity {
     private TransactionDao transactionDao;
 
     private String periodType = "monthly"; // weekly, monthly, yearly, custom
-    private String transactionType = "INCOME"; // INCOME or EXPENSE
+    private String transactionType = "EXPENSE"; // INCOME or EXPENSE
     private Calendar currentCalendar;
     private String customStartDate;
     private String customEndDate;
@@ -168,7 +168,7 @@ public class StatisticsActivity extends AppCompatActivity {
         typeTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                transactionType = tab.getPosition() == 0 ? "INCOME" : "EXPENSE";
+                transactionType = tab.getPosition() == 0 ? "EXPENSE" : "INCOME";
                 updateTypeText();
                 updateStatistics();
             }

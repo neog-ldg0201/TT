@@ -98,6 +98,9 @@ public class TossNotificationListenerService extends NotificationListenerService
         String formattedAmount = formatAmount(amount);
         String typeText = "INCOME".equals(type) ? "입금" : "결제";
 
+        // Use unique notification ID for each transaction
+        int notificationId = (int) System.currentTimeMillis();
+
         // Create intent to open AddTransactionActivity
         Intent intent = new Intent(this, AddTransactionActivity.class);
         intent.putExtra("amount", amount);
@@ -106,11 +109,12 @@ public class TossNotificationListenerService extends NotificationListenerService
         intent.putExtra("date", DateUtils.getCurrentDate());
         intent.putExtra("time", DateUtils.getCurrentTime());
         intent.putExtra("isFromNotification", true);
+        intent.putExtra("notificationId", notificationId); // Pass notification ID to cancel it later
         intent.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK | Intent.FLAG_ACTIVITY_CLEAR_TASK);
 
         PendingIntent pendingIntent = PendingIntent.getActivity(
                 this,
-                (int) System.currentTimeMillis(), // Unique request code
+                notificationId, // Use notification ID as request code
                 intent,
                 PendingIntent.FLAG_UPDATE_CURRENT | PendingIntent.FLAG_IMMUTABLE
         );
@@ -131,10 +135,8 @@ public class TossNotificationListenerService extends NotificationListenerService
 
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
         if (notificationManager != null) {
-            // Use unique notification ID for each transaction
-            int notificationId = (int) System.currentTimeMillis();
             notificationManager.notify(notificationId, builder.build());
-            Log.d(TAG, "Transaction notification shown - Amount: " + amount + ", Type: " + type);
+            Log.d(TAG, "Transaction notification shown - Amount: " + amount + ", Type: " + type + ", ID: " + notificationId);
         }
     }
 

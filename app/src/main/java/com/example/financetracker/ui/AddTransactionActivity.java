@@ -1,6 +1,7 @@
 package com.example.financetracker.ui;
 
 import android.app.DatePickerDialog;
+import android.app.NotificationManager;
 import android.app.TimePickerDialog;
 import android.content.Intent;
 import android.os.Bundle;
@@ -69,6 +70,17 @@ public class AddTransactionActivity extends AppCompatActivity {
 
         // Check if coming from notification
         isFromNotification = getIntent().getBooleanExtra("isFromNotification", false);
+
+        // Cancel notification if coming from notification
+        if (isFromNotification) {
+            int notificationId = getIntent().getIntExtra("notificationId", -1);
+            if (notificationId != -1) {
+                NotificationManager notificationManager = (NotificationManager) getSystemService(NOTIFICATION_SERVICE);
+                if (notificationManager != null) {
+                    notificationManager.cancel(notificationId);
+                }
+            }
+        }
 
         // Handle notification data
         handleNotificationData();

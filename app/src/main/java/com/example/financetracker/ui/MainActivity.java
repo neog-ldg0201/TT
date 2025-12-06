@@ -35,11 +35,9 @@ import com.prolificinteractive.materialcalendarview.OnDateSelectedListener;
 import java.text.NumberFormat;
 import java.util.ArrayList;
 import java.util.Calendar;
-import java.util.HashMap;
 import java.util.HashSet;
 import java.util.List;
 import java.util.Locale;
-import java.util.Map;
 
 public class MainActivity extends AppCompatActivity {
 
@@ -191,9 +189,16 @@ public class MainActivity extends AppCompatActivity {
             updateMonthYearText(date);
             updateMonthlyTransactionsHeader(date);
 
-            // Update summary and refresh transaction list
+            // Update summary
             updateMonthlySummary();
-            refreshMonthlyTransactions();
+
+            // Manually update transaction list for new month
+            // Use existing LiveData value instead of creating new observer
+            List<Transaction> allTransactions = viewModel.getAllTransactions().getValue();
+            if (allTransactions != null) {
+                List<Transaction> monthlyTransactions = filterTransactionsByMonth(allTransactions, currentYearMonth);
+                recentTransactionsAdapter.setTransactions(monthlyTransactions);
+            }
         });
 
         // Set initial month/year text
@@ -250,20 +255,15 @@ public class MainActivity extends AppCompatActivity {
 
     private void updateCalendarDecorators(List<Transaction> transactions) {
         // Group transactions by date
-        Map<String, Long> incomeByDate = new HashMap<>();
-        Map<String, Long> expenseByDate = new HashMap<>();
         HashSet<CalendarDay> incomeDates = new HashSet<>();
         HashSet<CalendarDay> expenseDates = new HashSet<>();
 
         for (Transaction transaction : transactions) {
             String date = transaction.getDate();
-            long amount = transaction.getAmount();
 
             if ("INCOME".equals(transaction.getType())) {
-                incomeByDate.put(date, incomeByDate.getOrDefault(date, 0L) + amount);
                 incomeDates.add(dateStringToCalendarDay(date));
             } else {
-                expenseByDate.put(date, expenseByDate.getOrDefault(date, 0L) + amount);
                 expenseDates.add(dateStringToCalendarDay(date));
             }
         }
@@ -277,11 +277,11 @@ public class MainActivity extends AppCompatActivity {
         // Add dot decorators for income and expense
         if (!incomeDates.isEmpty()) {
             calendarView.addDecorator(new DotDecorator(
-                getResources().getColor(R.color.income_color), incomeDates));
+                ContextCompat.getColor(this, R.color.income_color), incomeDates));
         }
         if (!expenseDates.isEmpty()) {
             calendarView.addDecorator(new DotDecorator(
-                getResources().getColor(R.color.expense_color), expenseDates));
+                ContextCompat.getColor(this, R.color.expense_color), expenseDates));
         }
     }
 
@@ -301,16 +301,6 @@ public class MainActivity extends AppCompatActivity {
         String headerText = String.format(Locale.KOREA, "%d년 %d월 거래 내역",
             date.getYear(), date.getMonth());
         monthlyTransactionsHeader.setText(headerText);
-    }
-
-    private void refreshMonthlyTransactions() {
-        // Trigger observer to refresh the transaction list
-        viewModel.getAllTransactions().observe(this, transactions -> {
-            if (transactions != null) {
-                List<Transaction> monthlyTransactions = filterTransactionsByMonth(transactions, currentYearMonth);
-                recentTransactionsAdapter.setTransactions(monthlyTransactions);
-            }
-        });
     }
 
     private String formatCurrency(long amount) {

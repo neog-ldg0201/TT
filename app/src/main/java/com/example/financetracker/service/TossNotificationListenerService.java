@@ -12,6 +12,7 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
+import com.example.financetracker.BuildConfig;
 import com.example.financetracker.R;
 import com.example.financetracker.data.NotificationHistoryDao;
 import com.example.financetracker.database.AppDatabase;
@@ -33,7 +34,9 @@ public class TossNotificationListenerService extends NotificationListenerService
     public void onCreate() {
         super.onCreate();
         createNotificationChannel();
-        Log.d(TAG, "TossNotificationListenerService created");
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "TossNotificationListenerService created");
+        }
     }
 
     @Override
@@ -45,7 +48,9 @@ public class TossNotificationListenerService extends NotificationListenerService
             return;
         }
 
-        Log.d(TAG, "Toss notification detected");
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "Toss notification detected");
+        }
 
         Notification notification = sbn.getNotification();
         if (notification == null) {
@@ -63,8 +68,10 @@ public class TossNotificationListenerService extends NotificationListenerService
         String titleStr = title.toString();
         String textStr = text.toString();
 
-        Log.d(TAG, "Title: " + titleStr);
-        Log.d(TAG, "Text: " + textStr);
+        if (BuildConfig.DEBUG) {
+            Log.d(TAG, "Title: " + titleStr);
+            Log.d(TAG, "Text: " + textStr);
+        }
 
         // Parse notification content
         Map<String, String> parsedData = TossNotificationParser.parse(titleStr, textStr);
@@ -91,7 +98,9 @@ public class TossNotificationListenerService extends NotificationListenerService
         new Thread(() -> {
             NotificationHistoryDao dao = AppDatabase.getInstance(this).notificationHistoryDao();
             dao.insert(notificationHistory);
-            Log.d(TAG, "Notification saved to history");
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "Notification saved to history");
+            }
         }).start();
 
         // Format amount with commas for display
@@ -136,7 +145,9 @@ public class TossNotificationListenerService extends NotificationListenerService
         NotificationManager notificationManager = getSystemService(NotificationManager.class);
         if (notificationManager != null) {
             notificationManager.notify(notificationId, builder.build());
-            Log.d(TAG, "Transaction notification shown - Amount: " + amount + ", Type: " + type + ", ID: " + notificationId);
+            if (BuildConfig.DEBUG) {
+                Log.d(TAG, "Transaction notification shown - Amount: " + amount + ", Type: " + type + ", ID: " + notificationId);
+            }
         }
     }
 

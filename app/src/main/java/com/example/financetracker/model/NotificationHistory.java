@@ -1,9 +1,11 @@
 package com.example.financetracker.model;
 
 import androidx.room.Entity;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "notification_history")
+@Entity(tableName = "notification_history",
+        indices = {@Index(value = {"timestamp"})})
 public class NotificationHistory {
     @PrimaryKey(autoGenerate = true)
     private int id;

@@ -1,9 +1,11 @@
 package com.example.financetracker.model;
 
 import androidx.room.Entity;
+import androidx.room.Index;
 import androidx.room.PrimaryKey;
 
-@Entity(tableName = "transactions")
+@Entity(tableName = "transactions",
+        indices = {@Index(value = {"date"}), @Index(value = {"type"})})
 public class Transaction {
     @PrimaryKey(autoGenerate = true)
     private int id;

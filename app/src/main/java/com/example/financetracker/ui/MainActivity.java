@@ -178,6 +178,8 @@ public class MainActivity extends AppCompatActivity {
             public void onDateSelected(MaterialCalendarView widget, CalendarDay date, boolean selected) {
                 String dateStr = DateUtils.calendarDayToString(date);
                 openDayDetail(dateStr);
+                // Clear selection immediately after click to remove selection highlight
+                widget.clearSelection();
             }
         });
 
@@ -268,6 +270,9 @@ public class MainActivity extends AppCompatActivity {
 
         // Remove old decorators
         calendarView.removeDecorators();
+
+        // Add today highlight decorator first (so it appears behind dots)
+        calendarView.addDecorator(new TodayDecorator());
 
         // Add dot decorators for income and expense
         if (!incomeDates.isEmpty()) {

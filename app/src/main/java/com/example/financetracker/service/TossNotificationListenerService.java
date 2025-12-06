@@ -12,7 +12,6 @@ import android.util.Log;
 
 import androidx.core.app.NotificationCompat;
 
-import com.example.financetracker.BuildConfig;
 import com.example.financetracker.R;
 import com.example.financetracker.data.NotificationHistoryDao;
 import com.example.financetracker.database.AppDatabase;

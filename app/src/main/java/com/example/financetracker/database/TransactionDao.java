@@ -61,6 +61,9 @@ public interface TransactionDao {
     @Query("SELECT category, SUM(amount) as totalAmount FROM transactions WHERE type = 'INCOME' AND date BETWEEN :startDate AND :endDate GROUP BY category ORDER BY totalAmount DESC")
     List<CategoryAmount> getIncomeCategoryStatistics(String startDate, String endDate);
 
+    @Query("UPDATE transactions SET category = :newCategory WHERE category = :oldCategory")
+    void updateCategory(String oldCategory, String newCategory);
+
     class CategoryAmount {
         public String category;
         public long totalAmount;

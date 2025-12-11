@@ -131,6 +131,11 @@ public class SettingsActivity extends AppCompatActivity {
             showDeleteConfirmDialog(category, position);
         });
 
+        // Set edit listener
+        categoryAdapter.setEditListener((category, position) -> {
+            showEditCategoryDialog(category, position);
+        });
+
         // Set move listener to save order when categories are reordered
         categoryAdapter.setMoveListener((fromPosition, toPosition) -> {
             saveCategoryOrder();
@@ -219,6 +224,44 @@ public class SettingsActivity extends AppCompatActivity {
         } else {
             newCategoryInputLayout.setHint("새 지출 분류 추가");
         }
+    }
+
+    private void showEditCategoryDialog(String category, int position) {
+        View dialogView = getLayoutInflater().inflate(R.layout.dialog_category_selector, null);
+        TextInputLayout inputLayout = dialogView.findViewById(R.id.categoryInputLayout);
+        TextInputEditText editText = dialogView.findViewById(R.id.categoryEditText);
+
+        inputLayout.setHint("분류 이름");
+        editText.setText(category);
+        editText.setSelection(category.length());
+
+        new AlertDialog.Builder(this)
+                .setTitle("분류 수정")
+                .setView(dialogView)
+                .setPositiveButton("수정", (dialog, which) -> {
+                    String newCategory = editText.getText().toString().trim();
+                    if (!newCategory.isEmpty() && !newCategory.equals(category)) {
+                        if (isIncomeTab) {
+                            categoryManager.updateIncomeCategory(category, newCategory, () -> {
+                                runOnUiThread(() -> {
+                                    updateCategoryList();
+                                    Toast.makeText(this, "분류가 수정되었습니다\n관련된 거래 내역도 모두 업데이트되었습니다", Toast.LENGTH_LONG).show();
+                                });
+                            });
+                        } else {
+                            categoryManager.updateExpenseCategory(category, newCategory, () -> {
+                                runOnUiThread(() -> {
+                                    updateCategoryList();
+                                    Toast.makeText(this, "분류가 수정되었습니다\n관련된 거래 내역도 모두 업데이트되었습니다", Toast.LENGTH_LONG).show();
+                                });
+                            });
+                        }
+                    } else if (newCategory.isEmpty()) {
+                        Toast.makeText(this, "분류 이름을 입력해주세요", Toast.LENGTH_SHORT).show();
+                    }
+                })
+                .setNegativeButton("취소", null)
+                .show();
     }
 
     private void showDeleteConfirmDialog(String category, int position) {

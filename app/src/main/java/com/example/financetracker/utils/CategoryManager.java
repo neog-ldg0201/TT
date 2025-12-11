@@ -3,9 +3,13 @@ package com.example.financetracker.utils;
 import android.content.Context;
 import android.content.SharedPreferences;
 
+import com.example.financetracker.database.AppDatabase;
+import com.example.financetracker.database.TransactionDao;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Executors;
 import java.util.regex.Pattern;
 
 public class CategoryManager {
@@ -27,8 +31,10 @@ public class CategoryManager {
     };
 
     private final SharedPreferences prefs;
+    private final Context context;
 
     public CategoryManager(Context context) {
+        this.context = context;
         prefs = context.getSharedPreferences(PREFS_NAME, Context.MODE_PRIVATE);
         initializeDefaultCategories();
     }
@@ -124,6 +130,42 @@ public class CategoryManager {
             return getIncomeCategories();
         } else {
             return getExpenseCategories();
+        }
+    }
+
+    public void updateIncomeCategory(String oldCategory, String newCategory, Runnable onComplete) {
+        List<String> categories = getIncomeCategories();
+        int index = categories.indexOf(oldCategory);
+        if (index != -1) {
+            categories.set(index, newCategory);
+            setIncomeCategories(categories);
+
+            // Update all transactions with this category
+            Executors.newSingleThreadExecutor().execute(() -> {
+                TransactionDao dao = AppDatabase.getInstance(context).transactionDao();
+                dao.updateCategory(oldCategory, newCategory);
+                if (onComplete != null) {
+                    onComplete.run();
+                }
+            });
+        }
+    }
+
+    public void updateExpenseCategory(String oldCategory, String newCategory, Runnable onComplete) {
+        List<String> categories = getExpenseCategories();
+        int index = categories.indexOf(oldCategory);
+        if (index != -1) {
+            categories.set(index, newCategory);
+            setExpenseCategories(categories);
+
+            // Update all transactions with this category
+            Executors.newSingleThreadExecutor().execute(() -> {
+                TransactionDao dao = AppDatabase.getInstance(context).transactionDao();
+                dao.updateCategory(oldCategory, newCategory);
+                if (onComplete != null) {
+                    onComplete.run();
+                }
+            });
         }
     }
 }

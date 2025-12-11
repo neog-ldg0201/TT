@@ -26,6 +26,16 @@
         android:textColor="@color/text_primary" />
 
     <ImageButton
+        android:id="@+id/editCategoryButton"
+        android:layout_width="36dp"
+        android:layout_height="36dp"
+        android:src="@android:drawable/ic_menu_edit"
+        android:background="?attr/selectableItemBackgroundBorderless"
+        android:contentDescription="수정"
+        app:tint="@color/primary"
+        android:layout_marginEnd="4dp" />
+
+    <ImageButton
         android:id="@+id/deleteCategoryButton"
         android:layout_width="36dp"
         android:layout_height="36dp"

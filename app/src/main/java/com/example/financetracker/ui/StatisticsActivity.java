@@ -52,7 +52,7 @@ public class StatisticsActivity extends AppCompatActivity {
     private RecyclerView statisticsRecyclerView;
     private CategoryStatisticsAdapter adapter;
     private LinearLayout categoryStatsLayout;
-    private LinearLayout trendStatsLayout;
+    private LinearLayout periodStatsLayout;
 
     private Button weeklyButton;
     private Button monthlyButton;
@@ -61,28 +61,28 @@ public class StatisticsActivity extends AppCompatActivity {
     private ImageButton previousPeriodButton;
     private ImageButton nextPeriodButton;
     private TabLayout typeTabLayout;
-    private TabLayout chartTypeTabLayout;
+    private TabLayout mainTabLayout;
 
     private TransactionDao transactionDao;
 
     private String periodType = "monthly"; // weekly, monthly, yearly, custom
     private String transactionType = "EXPENSE"; // INCOME or EXPENSE
-    private String chartType = "category"; // category or trend
+    private String mainTab = "category"; // category or period
     private Calendar currentCalendar;
     private String customStartDate;
     private String customEndDate;
 
     private static final int[] CHART_COLORS = {
-            Color.rgb(244, 67, 54),     // Red (Material)
-            Color.rgb(255, 87, 34),     // Deep Orange
-            Color.rgb(121, 85, 72),     // Brown (노란색 대체)
-            Color.rgb(76, 175, 80),     // Green
-            Color.rgb(0, 150, 136),     // Teal
-            Color.rgb(33, 150, 243),    // Blue
-            Color.rgb(63, 81, 181),     // Indigo
-            Color.rgb(156, 39, 176),    // Purple
-            Color.rgb(233, 30, 99),     // Pink
-            Color.rgb(96, 125, 139),    // Blue Grey
+            Color.rgb(255, 182, 193),   // 연한 핑크
+            Color.rgb(255, 200, 170),   // 연한 오렌지/피치
+            Color.rgb(255, 240, 180),   // 연한 노란색
+            Color.rgb(200, 240, 200),   // 연한 초록
+            Color.rgb(180, 235, 220),   // 연한 민트
+            Color.rgb(190, 220, 255),   // 연한 하늘색
+            Color.rgb(210, 190, 255),   // 연한 보라
+            Color.rgb(230, 200, 255),   // 연한 라벤더
+            Color.rgb(255, 210, 200),   // 연한 복숭아
+            Color.rgb(220, 220, 220),   // 연한 회색
     };
 
     @Override
@@ -111,7 +111,7 @@ public class StatisticsActivity extends AppCompatActivity {
         barChart = findViewById(R.id.barChart);
         statisticsRecyclerView = findViewById(R.id.statisticsRecyclerView);
         categoryStatsLayout = findViewById(R.id.categoryStatsLayout);
-        trendStatsLayout = findViewById(R.id.trendStatsLayout);
+        periodStatsLayout = findViewById(R.id.periodStatsLayout);
 
         weeklyButton = findViewById(R.id.weeklyButton);
         monthlyButton = findViewById(R.id.monthlyButton);
@@ -120,7 +120,7 @@ public class StatisticsActivity extends AppCompatActivity {
         previousPeriodButton = findViewById(R.id.previousPeriodButton);
         nextPeriodButton = findViewById(R.id.nextPeriodButton);
         typeTabLayout = findViewById(R.id.typeTabLayout);
-        chartTypeTabLayout = findViewById(R.id.chartTypeTabLayout);
+        mainTabLayout = findViewById(R.id.mainTabLayout);
     }
 
     private void setupToolbar() {
@@ -203,11 +203,11 @@ public class StatisticsActivity extends AppCompatActivity {
             movePeriod(1);
         });
 
-        chartTypeTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+        mainTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
-                chartType = tab.getPosition() == 0 ? "category" : "trend";
-                updateChartVisibility();
+                mainTab = tab.getPosition() == 0 ? "category" : "period";
+                updateTabVisibility();
                 updateStatistics();
             }
 
@@ -238,13 +238,13 @@ public class StatisticsActivity extends AppCompatActivity {
         monthlyButton.setEnabled(false);
     }
 
-    private void updateChartVisibility() {
-        if (chartType.equals("category")) {
+    private void updateTabVisibility() {
+        if (mainTab.equals("category")) {
             categoryStatsLayout.setVisibility(View.VISIBLE);
-            trendStatsLayout.setVisibility(View.GONE);
+            periodStatsLayout.setVisibility(View.GONE);
         } else {
             categoryStatsLayout.setVisibility(View.GONE);
-            trendStatsLayout.setVisibility(View.VISIBLE);
+            periodStatsLayout.setVisibility(View.VISIBLE);
         }
     }
 
@@ -312,10 +312,10 @@ public class StatisticsActivity extends AppCompatActivity {
     }
 
     private void updateStatistics() {
-        if (chartType.equals("category")) {
+        if (mainTab.equals("category")) {
             updateCategoryStatistics();
         } else {
-            updateTrendStatistics();
+            updatePeriodStatistics();
         }
     }
 
@@ -354,7 +354,7 @@ public class StatisticsActivity extends AppCompatActivity {
         }).start();
     }
 
-    private void updateTrendStatistics() {
+    private void updatePeriodStatistics() {
         String[] dateRange = getDateRange();
         String startDate = dateRange[0];
         String endDate = dateRange[1];
@@ -362,18 +362,73 @@ public class StatisticsActivity extends AppCompatActivity {
         updatePeriodText(startDate, endDate);
 
         new Thread(() -> {
-            List<TransactionDao.CategoryAmount> dailyAmounts = transactionType.equals("EXPENSE") ?
-                    transactionDao.getExpenseCategoryStatistics(startDate, endDate) :
-                    transactionDao.getIncomeCategoryStatistics(startDate, endDate);
-
+            List<String> categories = new ArrayList<>();
+            List<String> periods = new ArrayList<>();
+            java.util.Map<String, java.util.Map<String, Long>> data = new java.util.LinkedHashMap<>();
             long total = 0;
-            for (TransactionDao.CategoryAmount ca : dailyAmounts) {
-                total += ca.totalAmount;
+
+            if (periodType.equals("yearly")) {
+                // 연간: 월별 데이터
+                List<TransactionDao.MonthlyCategoryAmount> monthlyData =
+                        transactionDao.getMonthlyCategoryStatistics(
+                                transactionType,
+                                String.valueOf(currentCalendar.get(Calendar.YEAR))
+                        );
+
+                // 1~12월 기간 생성
+                for (int month = 1; month <= 12; month++) {
+                    String monthStr = String.format("%04d-%02d",
+                            currentCalendar.get(Calendar.YEAR), month);
+                    periods.add(monthStr);
+                    data.put(monthStr, new java.util.HashMap<>());
+                }
+
+                // 카테고리 추출 및 데이터 매핑
+                for (TransactionDao.MonthlyCategoryAmount ma : monthlyData) {
+                    if (!categories.contains(ma.category)) {
+                        categories.add(ma.category);
+                    }
+                    data.get(ma.month).put(ma.category, ma.totalAmount);
+                    total += ma.totalAmount;
+                }
+            } else {
+                // 주간/월간: 일별 데이터
+                List<TransactionDao.DailyCategoryAmount> dailyData =
+                        transactionDao.getDailyCategoryStatistics(
+                                transactionType, startDate, endDate
+                        );
+
+                // 날짜 범위 생성
+                SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
+                Calendar cal = Calendar.getInstance();
+                try {
+                    cal.setTime(sdf.parse(startDate));
+                    Calendar endCal = Calendar.getInstance();
+                    endCal.setTime(sdf.parse(endDate));
+
+                    while (!cal.after(endCal)) {
+                        String dateStr = sdf.format(cal.getTime());
+                        periods.add(dateStr);
+                        data.put(dateStr, new java.util.HashMap<>());
+                        cal.add(Calendar.DAY_OF_MONTH, 1);
+                    }
+                } catch (Exception e) {
+                    e.printStackTrace();
+                }
+
+                // 카테고리 추출 및 데이터 매핑
+                for (TransactionDao.DailyCategoryAmount da : dailyData) {
+                    if (!categories.contains(da.category)) {
+                        categories.add(da.category);
+                    }
+                    data.get(da.date).put(da.category, da.totalAmount);
+                    total += da.totalAmount;
+                }
             }
 
             final long finalTotal = total;
             runOnUiThread(() -> {
-                updateBarChart(dailyAmounts);
+                updateStackedBarChart(periods, categories, data);
 
                 String formattedTotal = NumberFormat.getNumberInstance(Locale.KOREA).format(finalTotal);
                 totalAmountText.setText(formattedTotal + "원");
@@ -453,7 +508,7 @@ public class StatisticsActivity extends AppCompatActivity {
         PieDataSet dataSet = new PieDataSet(entries, "");
         dataSet.setColors(CHART_COLORS);
         dataSet.setValueTextSize(12f);
-        dataSet.setValueTextColor(Color.WHITE);
+        dataSet.setValueTextColor(Color.BLACK);
         dataSet.setValueFormatter(new PercentFormatter(pieChart));
 
         PieData data = new PieData(dataSet);
@@ -461,8 +516,9 @@ public class StatisticsActivity extends AppCompatActivity {
         pieChart.invalidate();
     }
 
-    private void updateBarChart(List<TransactionDao.CategoryAmount> categoryAmounts) {
-        if (categoryAmounts.isEmpty()) {
+    private void updateStackedBarChart(List<String> periods, List<String> categories,
+                                       java.util.Map<String, java.util.Map<String, Long>> data) {
+        if (categories.isEmpty() || periods.isEmpty()) {
             barChart.clear();
             barChart.setNoDataText("데이터가 없습니다");
             barChart.invalidate();
@@ -472,35 +528,55 @@ public class StatisticsActivity extends AppCompatActivity {
         List<BarEntry> entries = new ArrayList<>();
         List<String> labels = new ArrayList<>();
 
-        for (int i = 0; i < categoryAmounts.size(); i++) {
-            TransactionDao.CategoryAmount ca = categoryAmounts.get(i);
-            entries.add(new BarEntry(i, ca.totalAmount));
-            labels.add(ca.category);
+        // 각 기간별로 BarEntry 생성 (stacked)
+        for (int i = 0; i < periods.size(); i++) {
+            String period = periods.get(i);
+            java.util.Map<String, Long> periodData = data.get(period);
+
+            // 카테고리별 값을 배열로 구성
+            float[] values = new float[categories.size()];
+            for (int j = 0; j < categories.size(); j++) {
+                String category = categories.get(j);
+                Long amount = periodData.get(category);
+                values[j] = amount != null ? amount : 0;
+            }
+
+            entries.add(new BarEntry(i, values));
+
+            // 라벨 생성 (날짜 또는 월)
+            if (periodType.equals("yearly")) {
+                // 월만 표시 (1월, 2월, ...)
+                String month = period.substring(5, 7);
+                labels.add(month + "월");
+            } else {
+                // 날짜 표시 (MM/DD)
+                String monthDay = period.substring(5);
+                labels.add(monthDay);
+            }
         }
 
         BarDataSet dataSet = new BarDataSet(entries, "");
+        dataSet.setColors(CHART_COLORS);
+        dataSet.setStackLabels(categories.toArray(new String[0]));
 
-        // 분류별로 다른 색상 적용
-        List<Integer> colors = new ArrayList<>();
-        for (int i = 0; i < categoryAmounts.size(); i++) {
-            colors.add(CHART_COLORS[i % CHART_COLORS.length]);
-        }
-        dataSet.setColors(colors);
-
-        dataSet.setValueTextSize(10f);
+        dataSet.setValueTextSize(9f);
+        dataSet.setValueTextColor(Color.BLACK);
         dataSet.setValueFormatter(new ValueFormatter() {
             @Override
             public String getFormattedValue(float value) {
+                if (value == 0) return "";
+                if (value < 1000) return "";
                 return NumberFormat.getNumberInstance(Locale.KOREA).format((long) value);
             }
         });
 
-        BarData data = new BarData(dataSet);
-        data.setBarWidth(0.8f);
+        BarData barData = new BarData(dataSet);
+        barData.setBarWidth(0.85f);
 
-        barChart.setData(data);
+        barChart.setData(barData);
         barChart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(labels));
-        barChart.getXAxis().setLabelCount(labels.size());
+        barChart.getXAxis().setLabelCount(Math.min(labels.size(), 12));
+        barChart.getXAxis().setLabelRotationAngle(-45f);
         barChart.invalidate();
     }
 }

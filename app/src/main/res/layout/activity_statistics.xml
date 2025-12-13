@@ -15,6 +15,22 @@
         android:theme="@style/ThemeOverlay.AppCompat.Dark.ActionBar"
         app:title="통계" />
 
+    <!-- Main Tabs (분류별 / 기간별) -->
+    <com.google.android.material.tabs.TabLayout
+        android:id="@+id/mainTabLayout"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        app:tabMode="fixed"
+        app:tabGravity="fill">
+
+        <com.google.android.material.tabs.TabItem
+            android:text="분류별" />
+
+        <com.google.android.material.tabs.TabItem
+            android:text="기간별" />
+
+    </com.google.android.material.tabs.TabLayout>
+
     <androidx.core.widget.NestedScrollView
         android:layout_width="match_parent"
         android:layout_height="match_parent"
@@ -113,23 +129,6 @@
 
             </LinearLayout>
 
-            <!-- Chart Type Tabs -->
-            <com.google.android.material.tabs.TabLayout
-                android:id="@+id/chartTypeTabLayout"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                app:tabMode="fixed"
-                app:tabGravity="fill">
-
-                <com.google.android.material.tabs.TabItem
-                    android:text="분류별" />
-
-                <com.google.android.material.tabs.TabItem
-                    android:text="추이" />
-
-            </com.google.android.material.tabs.TabLayout>
-
             <!-- Type Tabs -->
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/typeTabLayout"
@@ -199,15 +198,15 @@
 
             </LinearLayout>
 
-            <!-- Trend Statistics Layout (추이) -->
+            <!-- Period Statistics Layout (기간별) -->
             <LinearLayout
-                android:id="@+id/trendStatsLayout"
+                android:id="@+id/periodStatsLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
                 android:visibility="gone">
 
-                <!-- Bar Chart -->
+                <!-- Stacked Bar Chart -->
                 <com.github.mikephil.charting.charts.BarChart
                     android:id="@+id/barChart"
                     android:layout_width="match_parent"

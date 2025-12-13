@@ -64,7 +64,25 @@ public interface TransactionDao {
     @Query("UPDATE transactions SET category = :newCategory WHERE category = :oldCategory")
     void updateCategory(String oldCategory, String newCategory);
 
+    @Query("SELECT date, category, SUM(amount) as totalAmount FROM transactions WHERE type = :type AND date BETWEEN :startDate AND :endDate GROUP BY date, category ORDER BY date ASC")
+    List<DailyCategoryAmount> getDailyCategoryStatistics(String type, String startDate, String endDate);
+
+    @Query("SELECT substr(date, 1, 7) as month, category, SUM(amount) as totalAmount FROM transactions WHERE type = :type AND substr(date, 1, 4) = :year GROUP BY month, category ORDER BY month ASC")
+    List<MonthlyCategoryAmount> getMonthlyCategoryStatistics(String type, String year);
+
     class CategoryAmount {
+        public String category;
+        public long totalAmount;
+    }
+
+    class DailyCategoryAmount {
+        public String date;
+        public String category;
+        public long totalAmount;
+    }
+
+    class MonthlyCategoryAmount {
+        public String month;
         public String category;
         public long totalAmount;
     }

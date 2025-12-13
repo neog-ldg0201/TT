@@ -12,7 +12,7 @@
         android:layout_width="match_parent"
         android:layout_height="?attr/actionBarSize"
         android:background="@color/primary"
-        app:title="설정"
+        app:title="분류 설정"
         app:titleTextColor="@color/white"
         app:navigationIcon="@drawable/ic_back" />
 
@@ -85,77 +85,6 @@
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1" />
-
-        <!-- Data Backup/Restore Section -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="데이터 관리"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="8dp" />
-
-        <LinearLayout
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="horizontal">
-
-            <Button
-                android:id="@+id/exportButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="데이터 저장"
-                android:layout_marginEnd="8dp"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
-
-            <Button
-                android:id="@+id/importButton"
-                android:layout_width="0dp"
-                android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:text="데이터 불러오기"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
-
-        </LinearLayout>
-
-        <!-- Theme Selection Section -->
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="테마 설정"
-            android:textSize="16sp"
-            android:textStyle="bold"
-            android:layout_marginTop="16dp"
-            android:layout_marginBottom="8dp"
-            android:textColor="@color/text_primary" />
-
-        <LinearLayout
-            android:id="@+id/themeSelectionLayout"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            android:background="@drawable/item_background"
-            android:padding="12dp">
-
-            <TextView
-                android:id="@+id/currentThemeText"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="현재 테마: 시스템 설정"
-                android:textSize="14sp"
-                android:textColor="@color/text_secondary"
-                android:layout_marginBottom="8dp" />
-
-            <Button
-                android:id="@+id/changeThemeButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="테마 변경"
-                style="@style/Widget.MaterialComponents.Button.OutlinedButton" />
-
-        </LinearLayout>
 
     </LinearLayout>
 

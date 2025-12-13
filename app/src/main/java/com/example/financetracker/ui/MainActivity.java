@@ -129,7 +129,7 @@ public class MainActivity extends AppCompatActivity {
     public boolean onOptionsItemSelected(MenuItem item) {
         int itemId = item.getItemId();
         if (itemId == R.id.action_settings) {
-            Intent intent = new Intent(this, SettingsActivity.class);
+            Intent intent = new Intent(this, SettingsMenuActivity.class);
             startActivity(intent);
             return true;
         } else if (itemId == R.id.action_notifications) {

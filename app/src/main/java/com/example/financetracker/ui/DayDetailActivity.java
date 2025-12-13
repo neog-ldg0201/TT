@@ -87,8 +87,8 @@ public class DayDetailActivity extends AppCompatActivity {
         // 거래 항목 클릭 시 수정 페이지로 이동
         adapter.setOnTransactionClickListener(transaction -> {
             Intent intent = new Intent(this, AddTransactionActivity.class);
-            intent.putExtra("transaction_id", transaction.getId());
-            intent.putExtra("mode", "edit");
+            intent.putExtra(AddTransactionActivity.EXTRA_TRANSACTION_ID, transaction.getId());
+            intent.putExtra(AddTransactionActivity.EXTRA_EDIT_MODE, true);
             startActivity(intent);
         });
     }

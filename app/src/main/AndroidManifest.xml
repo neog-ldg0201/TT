@@ -41,11 +41,32 @@
             android:theme="@style/Theme.FinanceTracker.NoActionBar"
             android:windowSoftInputMode="adjustResize" />
 
-        <!-- Settings Activity -->
+        <!-- Settings Menu Activity -->
+        <activity
+            android:name=".ui.SettingsMenuActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.MainActivity"
+            android:theme="@style/Theme.FinanceTracker.NoActionBar" />
+
+        <!-- Category Settings Activity -->
         <activity
             android:name=".ui.SettingsActivity"
             android:exported="false"
-            android:parentActivityName=".ui.MainActivity"
+            android:parentActivityName=".ui.SettingsMenuActivity"
+            android:theme="@style/Theme.FinanceTracker.NoActionBar" />
+
+        <!-- Data Management Activity -->
+        <activity
+            android:name=".ui.DataManagementActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.SettingsMenuActivity"
+            android:theme="@style/Theme.FinanceTracker.NoActionBar" />
+
+        <!-- Theme Settings Activity -->
+        <activity
+            android:name=".ui.ThemeSettingsActivity"
+            android:exported="false"
+            android:parentActivityName=".ui.SettingsMenuActivity"
             android:theme="@style/Theme.FinanceTracker.NoActionBar" />
 
         <!-- Notification History Activity -->

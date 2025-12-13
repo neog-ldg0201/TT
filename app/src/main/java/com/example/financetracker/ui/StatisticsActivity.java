@@ -73,16 +73,16 @@ public class StatisticsActivity extends AppCompatActivity {
     private String customEndDate;
 
     private static final int[] CHART_COLORS = {
-            Color.rgb(255, 182, 193),   // 연한 핑크
-            Color.rgb(255, 200, 170),   // 연한 오렌지/피치
-            Color.rgb(255, 240, 180),   // 연한 노란색
-            Color.rgb(200, 240, 200),   // 연한 초록
-            Color.rgb(180, 235, 220),   // 연한 민트
-            Color.rgb(190, 220, 255),   // 연한 하늘색
-            Color.rgb(210, 190, 255),   // 연한 보라
-            Color.rgb(230, 200, 255),   // 연한 라벤더
-            Color.rgb(255, 210, 200),   // 연한 복숭아
-            Color.rgb(220, 220, 220),   // 연한 회색
+            Color.rgb(255, 128, 171),   // 밝은 핑크
+            Color.rgb(255, 159, 128),   // 밝은 오렌지
+            Color.rgb(255, 223, 128),   // 밝은 노란색
+            Color.rgb(128, 255, 128),   // 밝은 초록
+            Color.rgb(128, 255, 234),   // 밝은 민트
+            Color.rgb(128, 191, 255),   // 밝은 하늘색
+            Color.rgb(191, 128, 255),   // 밝은 보라
+            Color.rgb(223, 128, 255),   // 밝은 라벤더
+            Color.rgb(255, 179, 128),   // 밝은 코랄
+            Color.rgb(200, 200, 200),   // 밝은 회색
     };
 
     @Override
@@ -150,12 +150,18 @@ public class StatisticsActivity extends AppCompatActivity {
         barChart.getDescription().setEnabled(false);
         barChart.setDrawGridBackground(false);
         barChart.setDrawBarShadow(false);
-        barChart.setHighlightFullBarEnabled(false);
+        barChart.setHighlightFullBarEnabled(true);
         barChart.setPinchZoom(false);
         barChart.setDoubleTapToZoomEnabled(false);
 
         Legend legend = barChart.getLegend();
-        legend.setEnabled(false);
+        legend.setEnabled(true);
+        legend.setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
+        legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
+        legend.setOrientation(Legend.LegendOrientation.HORIZONTAL);
+        legend.setDrawInside(false);
+        legend.setWordWrapEnabled(true);
+        legend.setTextSize(11f);
 
         XAxis xAxis = barChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);

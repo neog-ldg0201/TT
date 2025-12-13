@@ -50,6 +50,7 @@ public class CategoryStatisticsAdapter extends RecyclerView.Adapter<CategoryStat
         } else {
             holder.percentageText.setBackgroundColor(Color.GRAY);
         }
+        holder.percentageText.setTextColor(Color.BLACK);
     }
 
     @Override

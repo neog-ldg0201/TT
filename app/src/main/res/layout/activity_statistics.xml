@@ -113,12 +113,28 @@
 
             </LinearLayout>
 
+            <!-- Chart Type Tabs -->
+            <com.google.android.material.tabs.TabLayout
+                android:id="@+id/chartTypeTabLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                app:tabMode="fixed"
+                app:tabGravity="fill">
+
+                <com.google.android.material.tabs.TabItem
+                    android:text="분류별" />
+
+                <com.google.android.material.tabs.TabItem
+                    android:text="추이" />
+
+            </com.google.android.material.tabs.TabLayout>
+
             <!-- Type Tabs -->
             <com.google.android.material.tabs.TabLayout
                 android:id="@+id/typeTabLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
                 app:tabMode="fixed"
                 app:tabGravity="fill">
 
@@ -158,21 +174,47 @@
 
             </LinearLayout>
 
-            <!-- Pie Chart -->
-            <com.github.mikephil.charting.charts.PieChart
-                android:id="@+id/pieChart"
-                android:layout_width="match_parent"
-                android:layout_height="300dp"
-                android:layout_margin="16dp"/>
-
-            <!-- Statistics List -->
-            <androidx.recyclerview.widget.RecyclerView
-                android:id="@+id/statisticsRecyclerView"
+            <!-- Category Statistics Layout (분류별) -->
+            <LinearLayout
+                android:id="@+id/categoryStatsLayout"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_marginTop="8dp"
-                android:layout_marginBottom="16dp"
-                android:nestedScrollingEnabled="false"/>
+                android:orientation="vertical">
+
+                <!-- Pie Chart -->
+                <com.github.mikephil.charting.charts.PieChart
+                    android:id="@+id/pieChart"
+                    android:layout_width="match_parent"
+                    android:layout_height="300dp"
+                    android:layout_margin="16dp"/>
+
+                <!-- Statistics List -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/statisticsRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="16dp"
+                    android:nestedScrollingEnabled="false"/>
+
+            </LinearLayout>
+
+            <!-- Trend Statistics Layout (추이) -->
+            <LinearLayout
+                android:id="@+id/trendStatsLayout"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:visibility="gone">
+
+                <!-- Bar Chart -->
+                <com.github.mikephil.charting.charts.BarChart
+                    android:id="@+id/barChart"
+                    android:layout_width="match_parent"
+                    android:layout_height="350dp"
+                    android:layout_margin="16dp"/>
+
+            </LinearLayout>
 
         </LinearLayout>
 

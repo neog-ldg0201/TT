@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.ImageButton;
+import android.widget.LinearLayout;
 import android.widget.TextView;
 
 import androidx.appcompat.app.AppCompatActivity;
@@ -17,12 +18,19 @@ import com.example.financetracker.R;
 import com.example.financetracker.database.AppDatabase;
 import com.example.financetracker.database.TransactionDao;
 import com.example.financetracker.model.CategoryStatistics;
+import com.github.mikephil.charting.charts.BarChart;
 import com.github.mikephil.charting.charts.PieChart;
 import com.github.mikephil.charting.components.Legend;
+import com.github.mikephil.charting.components.XAxis;
+import com.github.mikephil.charting.data.BarData;
+import com.github.mikephil.charting.data.BarDataSet;
+import com.github.mikephil.charting.data.BarEntry;
 import com.github.mikephil.charting.data.PieData;
 import com.github.mikephil.charting.data.PieDataSet;
 import com.github.mikephil.charting.data.PieEntry;
+import com.github.mikephil.charting.formatter.IndexAxisValueFormatter;
 import com.github.mikephil.charting.formatter.PercentFormatter;
+import com.github.mikephil.charting.formatter.ValueFormatter;
 import com.google.android.material.datepicker.MaterialDatePicker;
 import com.google.android.material.tabs.TabLayout;
 
@@ -40,8 +48,11 @@ public class StatisticsActivity extends AppCompatActivity {
     private TextView totalTypeText;
     private TextView totalAmountText;
     private PieChart pieChart;
+    private BarChart barChart;
     private RecyclerView statisticsRecyclerView;
     private CategoryStatisticsAdapter adapter;
+    private LinearLayout categoryStatsLayout;
+    private LinearLayout trendStatsLayout;
 
     private Button weeklyButton;
     private Button monthlyButton;
@@ -50,26 +61,28 @@ public class StatisticsActivity extends AppCompatActivity {
     private ImageButton previousPeriodButton;
     private ImageButton nextPeriodButton;
     private TabLayout typeTabLayout;
+    private TabLayout chartTypeTabLayout;
 
     private TransactionDao transactionDao;
 
     private String periodType = "monthly"; // weekly, monthly, yearly, custom
     private String transactionType = "EXPENSE"; // INCOME or EXPENSE
+    private String chartType = "category"; // category or trend
     private Calendar currentCalendar;
     private String customStartDate;
     private String customEndDate;
 
     private static final int[] CHART_COLORS = {
-            Color.rgb(255, 102, 102),   // Red
-            Color.rgb(255, 178, 102),   // Orange
-            Color.rgb(255, 255, 102),   // Yellow
-            Color.rgb(178, 255, 102),   // Light Green
-            Color.rgb(102, 255, 178),   // Mint
-            Color.rgb(102, 178, 255),   // Light Blue
-            Color.rgb(178, 102, 255),   // Purple
-            Color.rgb(255, 102, 255),   // Pink
-            Color.rgb(255, 102, 178),   // Light Pink
-            Color.rgb(178, 178, 178),   // Gray
+            Color.rgb(244, 67, 54),     // Red (Material)
+            Color.rgb(255, 87, 34),     // Deep Orange
+            Color.rgb(121, 85, 72),     // Brown (노란색 대체)
+            Color.rgb(76, 175, 80),     // Green
+            Color.rgb(0, 150, 136),     // Teal
+            Color.rgb(33, 150, 243),    // Blue
+            Color.rgb(63, 81, 181),     // Indigo
+            Color.rgb(156, 39, 176),    // Purple
+            Color.rgb(233, 30, 99),     // Pink
+            Color.rgb(96, 125, 139),    // Blue Grey
     };
 
     @Override
@@ -83,6 +96,7 @@ public class StatisticsActivity extends AppCompatActivity {
         initViews();
         setupToolbar();
         setupPieChart();
+        setupBarChart();
         setupRecyclerView();
         setupListeners();
         updateTypeText();
@@ -94,7 +108,10 @@ public class StatisticsActivity extends AppCompatActivity {
         totalTypeText = findViewById(R.id.totalTypeText);
         totalAmountText = findViewById(R.id.totalAmountText);
         pieChart = findViewById(R.id.pieChart);
+        barChart = findViewById(R.id.barChart);
         statisticsRecyclerView = findViewById(R.id.statisticsRecyclerView);
+        categoryStatsLayout = findViewById(R.id.categoryStatsLayout);
+        trendStatsLayout = findViewById(R.id.trendStatsLayout);
 
         weeklyButton = findViewById(R.id.weeklyButton);
         monthlyButton = findViewById(R.id.monthlyButton);
@@ -103,6 +120,7 @@ public class StatisticsActivity extends AppCompatActivity {
         previousPeriodButton = findViewById(R.id.previousPeriodButton);
         nextPeriodButton = findViewById(R.id.nextPeriodButton);
         typeTabLayout = findViewById(R.id.typeTabLayout);
+        chartTypeTabLayout = findViewById(R.id.chartTypeTabLayout);
     }
 
     private void setupToolbar() {
@@ -126,6 +144,26 @@ public class StatisticsActivity extends AppCompatActivity {
 
         Legend legend = pieChart.getLegend();
         legend.setEnabled(false);
+    }
+
+    private void setupBarChart() {
+        barChart.getDescription().setEnabled(false);
+        barChart.setDrawGridBackground(false);
+        barChart.setDrawBarShadow(false);
+        barChart.setHighlightFullBarEnabled(false);
+        barChart.setPinchZoom(false);
+        barChart.setDoubleTapToZoomEnabled(false);
+
+        Legend legend = barChart.getLegend();
+        legend.setEnabled(false);
+
+        XAxis xAxis = barChart.getXAxis();
+        xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
+        xAxis.setDrawGridLines(false);
+        xAxis.setGranularity(1f);
+
+        barChart.getAxisLeft().setDrawGridLines(false);
+        barChart.getAxisRight().setEnabled(false);
     }
 
     private void setupRecyclerView() {
@@ -165,6 +203,21 @@ public class StatisticsActivity extends AppCompatActivity {
             movePeriod(1);
         });
 
+        chartTypeTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                chartType = tab.getPosition() == 0 ? "category" : "trend";
+                updateChartVisibility();
+                updateStatistics();
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {}
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {}
+        });
+
         typeTabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
             @Override
             public void onTabSelected(TabLayout.Tab tab) {
@@ -183,6 +236,16 @@ public class StatisticsActivity extends AppCompatActivity {
         // Set monthly as default selected
         monthlyButton.setSelected(true);
         monthlyButton.setEnabled(false);
+    }
+
+    private void updateChartVisibility() {
+        if (chartType.equals("category")) {
+            categoryStatsLayout.setVisibility(View.VISIBLE);
+            trendStatsLayout.setVisibility(View.GONE);
+        } else {
+            categoryStatsLayout.setVisibility(View.GONE);
+            trendStatsLayout.setVisibility(View.VISIBLE);
+        }
     }
 
     private void updateButtonStates() {
@@ -221,7 +284,6 @@ public class StatisticsActivity extends AppCompatActivity {
     }
 
     private void showCustomDatePicker() {
-        // Build Material Date Range Picker
         MaterialDatePicker<Pair<Long, Long>> dateRangePicker = MaterialDatePicker.Builder.dateRangePicker()
                 .setTitleText("기간 선택")
                 .setSelection(
@@ -234,7 +296,6 @@ public class StatisticsActivity extends AppCompatActivity {
 
         dateRangePicker.addOnPositiveButtonClickListener(selection -> {
             if (selection != null && selection.first != null && selection.second != null) {
-                // Convert milliseconds to date strings
                 SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
                 sdf.setTimeZone(TimeZone.getTimeZone("UTC"));
 
@@ -251,6 +312,14 @@ public class StatisticsActivity extends AppCompatActivity {
     }
 
     private void updateStatistics() {
+        if (chartType.equals("category")) {
+            updateCategoryStatistics();
+        } else {
+            updateTrendStatistics();
+        }
+    }
+
+    private void updateCategoryStatistics() {
         String[] dateRange = getDateRange();
         String startDate = dateRange[0];
         String endDate = dateRange[1];
@@ -285,6 +354,33 @@ public class StatisticsActivity extends AppCompatActivity {
         }).start();
     }
 
+    private void updateTrendStatistics() {
+        String[] dateRange = getDateRange();
+        String startDate = dateRange[0];
+        String endDate = dateRange[1];
+
+        updatePeriodText(startDate, endDate);
+
+        new Thread(() -> {
+            List<TransactionDao.CategoryAmount> dailyAmounts = transactionType.equals("EXPENSE") ?
+                    transactionDao.getExpenseCategoryStatistics(startDate, endDate) :
+                    transactionDao.getIncomeCategoryStatistics(startDate, endDate);
+
+            long total = 0;
+            for (TransactionDao.CategoryAmount ca : dailyAmounts) {
+                total += ca.totalAmount;
+            }
+
+            final long finalTotal = total;
+            runOnUiThread(() -> {
+                updateBarChart(dailyAmounts);
+
+                String formattedTotal = NumberFormat.getNumberInstance(Locale.KOREA).format(finalTotal);
+                totalAmountText.setText(formattedTotal + "원");
+            });
+        }).start();
+    }
+
     private String[] getDateRange() {
         SimpleDateFormat sdf = new SimpleDateFormat("yyyy-MM-dd", Locale.getDefault());
         Calendar start = (Calendar) currentCalendar.clone();
@@ -308,7 +404,6 @@ public class StatisticsActivity extends AppCompatActivity {
                 if (customStartDate != null && customEndDate != null) {
                     return new String[]{customStartDate, customEndDate};
                 }
-                // Fallback to current month if custom dates not set
                 start.set(Calendar.DAY_OF_MONTH, 1);
                 end.set(Calendar.DAY_OF_MONTH, end.getActualMaximum(Calendar.DAY_OF_MONTH));
                 break;
@@ -320,9 +415,9 @@ public class StatisticsActivity extends AppCompatActivity {
     private void updatePeriodText(String startDate, String endDate) {
         switch (periodType) {
             case "weekly":
-                periodText.setText(String.format("%d년 %d주차",
-                        currentCalendar.get(Calendar.YEAR),
-                        currentCalendar.get(Calendar.WEEK_OF_YEAR)));
+                String formattedStart = startDate.replace("-", ".");
+                String formattedEnd = endDate.replace("-", ".");
+                periodText.setText(String.format("%s ~ %s", formattedStart, formattedEnd));
                 break;
             case "monthly":
                 periodText.setText(String.format("%d년 %d월",
@@ -364,5 +459,48 @@ public class StatisticsActivity extends AppCompatActivity {
         PieData data = new PieData(dataSet);
         pieChart.setData(data);
         pieChart.invalidate();
+    }
+
+    private void updateBarChart(List<TransactionDao.CategoryAmount> categoryAmounts) {
+        if (categoryAmounts.isEmpty()) {
+            barChart.clear();
+            barChart.setNoDataText("데이터가 없습니다");
+            barChart.invalidate();
+            return;
+        }
+
+        List<BarEntry> entries = new ArrayList<>();
+        List<String> labels = new ArrayList<>();
+
+        for (int i = 0; i < categoryAmounts.size(); i++) {
+            TransactionDao.CategoryAmount ca = categoryAmounts.get(i);
+            entries.add(new BarEntry(i, ca.totalAmount));
+            labels.add(ca.category);
+        }
+
+        BarDataSet dataSet = new BarDataSet(entries, "");
+
+        // 분류별로 다른 색상 적용
+        List<Integer> colors = new ArrayList<>();
+        for (int i = 0; i < categoryAmounts.size(); i++) {
+            colors.add(CHART_COLORS[i % CHART_COLORS.length]);
+        }
+        dataSet.setColors(colors);
+
+        dataSet.setValueTextSize(10f);
+        dataSet.setValueFormatter(new ValueFormatter() {
+            @Override
+            public String getFormattedValue(float value) {
+                return NumberFormat.getNumberInstance(Locale.KOREA).format((long) value);
+            }
+        });
+
+        BarData data = new BarData(dataSet);
+        data.setBarWidth(0.8f);
+
+        barChart.setData(data);
+        barChart.getXAxis().setValueFormatter(new IndexAxisValueFormatter(labels));
+        barChart.getXAxis().setLabelCount(labels.size());
+        barChart.invalidate();
     }
 }

@@ -1,5 +1,6 @@
 package com.example.financetracker.ui;
 
+import android.content.Intent;
 import android.os.Bundle;
 import android.view.View;
 import android.widget.TextView;
@@ -82,6 +83,14 @@ public class DayDetailActivity extends AppCompatActivity {
         adapter = new TransactionAdapter(new ArrayList<>());
         transactionsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         transactionsRecyclerView.setAdapter(adapter);
+
+        // 거래 항목 클릭 시 수정 페이지로 이동
+        adapter.setOnTransactionClickListener(transaction -> {
+            Intent intent = new Intent(this, AddTransactionActivity.class);
+            intent.putExtra("transaction_id", transaction.getId());
+            intent.putExtra("mode", "edit");
+            startActivity(intent);
+        });
     }
 
     private void updateDaySummary(List<Transaction> transactions) {

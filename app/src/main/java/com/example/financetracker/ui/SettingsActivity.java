@@ -2,7 +2,9 @@ package com.example.financetracker.ui;
 
 import android.net.Uri;
 import android.os.Bundle;
+import android.view.View;
 import android.widget.Button;
+import android.widget.EditText;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -227,17 +229,15 @@ public class SettingsActivity extends AppCompatActivity {
     }
 
     private void showEditCategoryDialog(String category, int position) {
-        View dialogView = getLayoutInflater().inflate(R.layout.dialog_category_selector, null);
-        TextInputLayout inputLayout = dialogView.findViewById(R.id.categoryInputLayout);
-        TextInputEditText editText = dialogView.findViewById(R.id.categoryEditText);
-
-        inputLayout.setHint("분류 이름");
+        final EditText editText = new EditText(this);
         editText.setText(category);
         editText.setSelection(category.length());
+        editText.setPadding(50, 40, 50, 40);
 
         new AlertDialog.Builder(this)
                 .setTitle("분류 수정")
-                .setView(dialogView)
+                .setMessage("새로운 분류 이름을 입력하세요")
+                .setView(editText)
                 .setPositiveButton("수정", (dialog, which) -> {
                     String newCategory = editText.getText().toString().trim();
                     if (!newCategory.isEmpty() && !newCategory.equals(category)) {

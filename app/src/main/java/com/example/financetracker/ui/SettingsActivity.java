@@ -5,6 +5,7 @@ import android.os.Bundle;
 import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
+import android.widget.TextView;
 import android.widget.Toast;
 
 import androidx.activity.result.ActivityResultLauncher;
@@ -21,6 +22,7 @@ import com.example.financetracker.R;
 import com.example.financetracker.utils.BackupManager;
 import com.example.financetracker.utils.CategoryManager;
 import com.example.financetracker.utils.DateUtils;
+import com.example.financetracker.utils.ThemeManager;
 import com.google.android.material.tabs.TabLayout;
 import com.google.android.material.textfield.TextInputEditText;
 import com.google.android.material.textfield.TextInputLayout;
@@ -32,6 +34,7 @@ public class SettingsActivity extends AppCompatActivity {
 
     private CategoryManager categoryManager;
     private BackupManager backupManager;
+    private ThemeManager themeManager;
 
     private TabLayout tabLayout;
     private RecyclerView categoryRecyclerView;
@@ -40,6 +43,8 @@ public class SettingsActivity extends AppCompatActivity {
     private Button addCategoryButton;
     private Button exportButton;
     private Button importButton;
+    private Button changeThemeButton;
+    private TextView currentThemeText;
 
     private CategoryAdapter categoryAdapter;
     private boolean isIncomeTab = true; // 현재 수입 탭인지 여부
@@ -55,6 +60,7 @@ public class SettingsActivity extends AppCompatActivity {
 
         categoryManager = new CategoryManager(this);
         backupManager = new BackupManager(this);
+        themeManager = new ThemeManager(this);
 
         setupLaunchers();
         initViews();
@@ -94,6 +100,8 @@ public class SettingsActivity extends AppCompatActivity {
         addCategoryButton = findViewById(R.id.addCategoryButton);
         exportButton = findViewById(R.id.exportButton);
         importButton = findViewById(R.id.importButton);
+        changeThemeButton = findViewById(R.id.changeThemeButton);
+        currentThemeText = findViewById(R.id.currentThemeText);
     }
 
     private void setupToolbar() {
@@ -200,6 +208,10 @@ public class SettingsActivity extends AppCompatActivity {
                     .setNegativeButton("취소", null)
                     .show();
         });
+
+        changeThemeButton.setOnClickListener(v -> showThemeSelectionDialog());
+
+        updateThemeDisplay();
     }
 
     private void updateCategoryList() {
@@ -334,5 +346,29 @@ public class SettingsActivity extends AppCompatActivity {
                 });
             }
         });
+    }
+
+    private void showThemeSelectionDialog() {
+        String[] themes = {"시스템 설정", "라이트 모드", "다크 모드"};
+        int currentTheme = themeManager.getThemeMode();
+
+        new AlertDialog.Builder(this)
+                .setTitle("테마 선택")
+                .setSingleChoiceItems(themes, currentTheme, (dialog, which) -> {
+                    themeManager.setThemeMode(which);
+                    updateThemeDisplay();
+                    dialog.dismiss();
+
+                    // 테마 변경 후 액티비티 재생성
+                    recreate();
+                })
+                .setNegativeButton("취소", null)
+                .show();
+    }
+
+    private void updateThemeDisplay() {
+        int currentTheme = themeManager.getThemeMode();
+        String themeName = themeManager.getThemeModeName(currentTheme);
+        currentThemeText.setText("현재 테마: " + themeName);
     }
 }

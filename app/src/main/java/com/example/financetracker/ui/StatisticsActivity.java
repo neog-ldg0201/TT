@@ -7,6 +7,7 @@ import android.widget.Button;
 import android.widget.ImageButton;
 import android.widget.LinearLayout;
 import android.widget.TextView;
+import android.widget.Toast;
 
 import androidx.appcompat.app.AppCompatActivity;
 import androidx.appcompat.widget.Toolbar;
@@ -51,6 +52,9 @@ public class StatisticsActivity extends AppCompatActivity {
     private BarChart barChart;
     private RecyclerView statisticsRecyclerView;
     private CategoryStatisticsAdapter adapter;
+    private RecyclerView periodDetailRecyclerView;
+    private CategoryStatisticsAdapter periodDetailAdapter;
+    private TextView periodDetailTitle;
     private LinearLayout categoryStatsLayout;
     private LinearLayout periodStatsLayout;
 
@@ -74,6 +78,8 @@ public class StatisticsActivity extends AppCompatActivity {
 
     // 현재 기간의 카테고리 목록 (막대 그래프 클릭 시 사용)
     private List<String> currentPeriodCategories = new ArrayList<>();
+    private List<String> currentPeriods = new ArrayList<>();
+    private java.util.Map<String, java.util.Map<String, Long>> currentPeriodData = new java.util.LinkedHashMap<>();
 
     private static final int[] CHART_COLORS = {
             Color.rgb(255, 128, 171),   // 밝은 핑크
@@ -113,6 +119,8 @@ public class StatisticsActivity extends AppCompatActivity {
         pieChart = findViewById(R.id.pieChart);
         barChart = findViewById(R.id.barChart);
         statisticsRecyclerView = findViewById(R.id.statisticsRecyclerView);
+        periodDetailRecyclerView = findViewById(R.id.periodDetailRecyclerView);
+        periodDetailTitle = findViewById(R.id.periodDetailTitle);
         categoryStatsLayout = findViewById(R.id.categoryStatsLayout);
         periodStatsLayout = findViewById(R.id.periodStatsLayout);
 
@@ -170,7 +178,7 @@ public class StatisticsActivity extends AppCompatActivity {
         barChart.getAxisLeft().setDrawGridLines(false);
         barChart.getAxisRight().setEnabled(false);
 
-        // 막대 클릭 시 정보 표시
+        // 막대 클릭 시 상세 정보 표시
         barChart.setOnChartValueSelectedListener(new com.github.mikephil.charting.listener.OnChartValueSelectedListener() {
             @Override
             public void onValueSelected(com.github.mikephil.charting.data.Entry e, com.github.mikephil.charting.highlight.Highlight h) {
@@ -178,28 +186,18 @@ public class StatisticsActivity extends AppCompatActivity {
                     BarEntry barEntry = (BarEntry) e;
                     int index = (int) barEntry.getX();
 
-                    // 클릭한 막대의 정보를 Toast로 표시
-                    StringBuilder info = new StringBuilder();
-                    float[] values = barEntry.getYVals();
-                    if (values != null && values.length > 0) {
-                        List<String> categories = getCategoryNamesForPeriod();
-                        for (int i = 0; i < values.length && i < categories.size(); i++) {
-                            if (values[i] > 0) {
-                                info.append(categories.get(i)).append(": ")
-                                    .append(NumberFormat.getNumberInstance(Locale.KOREA).format((long)values[i]))
-                                    .append("원\n");
-                            }
-                        }
-                        if (info.length() > 0) {
-                            Toast.makeText(StatisticsActivity.this, info.toString().trim(), Toast.LENGTH_SHORT).show();
-                        }
+                    // 클릭한 막대의 기간 가져오기
+                    if (index >= 0 && index < currentPeriods.size()) {
+                        String selectedPeriod = currentPeriods.get(index);
+                        showPeriodDetail(selectedPeriod);
                     }
                 }
             }
 
             @Override
             public void onNothingSelected() {
-                // Do nothing
+                periodDetailRecyclerView.setVisibility(View.GONE);
+                periodDetailTitle.setText("막대를 클릭하면 상세 내역을 볼 수 있습니다");
             }
         });
     }
@@ -208,6 +206,10 @@ public class StatisticsActivity extends AppCompatActivity {
         adapter = new CategoryStatisticsAdapter(new ArrayList<>(), CHART_COLORS);
         statisticsRecyclerView.setLayoutManager(new LinearLayoutManager(this));
         statisticsRecyclerView.setAdapter(adapter);
+
+        periodDetailAdapter = new CategoryStatisticsAdapter(new ArrayList<>(), CHART_COLORS);
+        periodDetailRecyclerView.setLayoutManager(new LinearLayoutManager(this));
+        periodDetailRecyclerView.setAdapter(periodDetailAdapter);
     }
 
     private void setupListeners() {
@@ -560,6 +562,8 @@ public class StatisticsActivity extends AppCompatActivity {
             barChart.clear();
             barChart.setNoDataText("데이터가 없습니다");
             barChart.invalidate();
+            periodDetailRecyclerView.setVisibility(View.GONE);
+            periodDetailTitle.setText("데이터가 없습니다");
             return;
         }
 
@@ -567,6 +571,10 @@ public class StatisticsActivity extends AppCompatActivity {
         List<String> sortedCategories = new ArrayList<>(categories);
         java.util.Collections.sort(sortedCategories);
         currentPeriodCategories = sortedCategories;
+
+        // 현재 기간 데이터 저장
+        currentPeriods = new ArrayList<>(periods);
+        currentPeriodData = new java.util.LinkedHashMap<>(data);
 
         List<BarEntry> entries = new ArrayList<>();
         List<String> labels = new ArrayList<>();
@@ -627,6 +635,52 @@ public class StatisticsActivity extends AppCompatActivity {
         barChart.getXAxis().setLabelCount(Math.min(labels.size(), 12));
         barChart.getXAxis().setLabelRotationAngle(-45f);
         barChart.invalidate();
+
+        // 상세 정보 초기화
+        periodDetailRecyclerView.setVisibility(View.GONE);
+        periodDetailTitle.setText("막대를 클릭하면 상세 내역을 볼 수 있습니다");
+    }
+
+    private void showPeriodDetail(String period) {
+        java.util.Map<String, Long> periodData = currentPeriodData.get(period);
+        if (periodData == null || periodData.isEmpty()) {
+            periodDetailRecyclerView.setVisibility(View.GONE);
+            periodDetailTitle.setText("선택한 기간에 데이터가 없습니다");
+            return;
+        }
+
+        // 날짜/월 라벨 생성
+        String periodLabel;
+        if (periodType.equals("yearly")) {
+            String month = period.substring(5, 7);
+            periodLabel = month + "월 상세 내역";
+        } else {
+            String monthDay = period.substring(5);
+            periodLabel = monthDay + " 상세 내역";
+        }
+        periodDetailTitle.setText(periodLabel);
+
+        // 카테고리별 통계 생성
+        List<CategoryStatistics> statistics = new ArrayList<>();
+        long total = 0;
+
+        for (String category : currentPeriodCategories) {
+            Long amount = periodData.get(category);
+            if (amount != null && amount > 0) {
+                CategoryStatistics stat = new CategoryStatistics(category, amount);
+                statistics.add(stat);
+                total += amount;
+            }
+        }
+
+        // 퍼센트 계산
+        for (CategoryStatistics stat : statistics) {
+            stat.setPercentage(total > 0 ? (stat.getTotalAmount() * 100f / total) : 0);
+        }
+
+        // RecyclerView 업데이트
+        periodDetailAdapter.setStatistics(statistics);
+        periodDetailRecyclerView.setVisibility(View.VISIBLE);
     }
 
     private List<String> getCategoryNamesForPeriod() {

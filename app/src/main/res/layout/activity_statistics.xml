@@ -213,6 +213,28 @@
                     android:layout_height="350dp"
                     android:layout_margin="16dp"/>
 
+                <!-- Period Detail Title -->
+                <TextView
+                    android:id="@+id/periodDetailTitle"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="막대를 클릭하면 상세 내역을 볼 수 있습니다"
+                    android:textSize="14sp"
+                    android:textColor="@color/text_secondary"
+                    android:gravity="center"
+                    android:padding="8dp"
+                    android:layout_marginTop="8dp"/>
+
+                <!-- Period Detail RecyclerView -->
+                <androidx.recyclerview.widget.RecyclerView
+                    android:id="@+id/periodDetailRecyclerView"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="8dp"
+                    android:layout_marginBottom="16dp"
+                    android:nestedScrollingEnabled="false"
+                    android:visibility="gone"/>
+
             </LinearLayout>
 
         </LinearLayout>

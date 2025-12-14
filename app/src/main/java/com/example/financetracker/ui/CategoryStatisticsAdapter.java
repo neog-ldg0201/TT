@@ -45,7 +45,10 @@ public class CategoryStatisticsAdapter extends RecyclerView.Adapter<CategoryStat
         holder.categoryAmountText.setText(formattedAmount + "원");
 
         // Set color for percentage badge
-        if (position < colors.length) {
+        int colorIndex = stat.getColorIndex();
+        if (colorIndex >= 0 && colorIndex < colors.length) {
+            holder.percentageText.setBackgroundColor(colors[colorIndex]);
+        } else if (position < colors.length) {
             holder.percentageText.setBackgroundColor(colors[position]);
         } else {
             holder.percentageText.setBackgroundColor(Color.GRAY);

@@ -4,10 +4,12 @@ public class CategoryStatistics {
     private String category;
     private long totalAmount;
     private float percentage;
+    private int colorIndex;
 
     public CategoryStatistics(String category, long totalAmount) {
         this.category = category;
         this.totalAmount = totalAmount;
+        this.colorIndex = -1;
     }
 
     public String getCategory() {
@@ -32,5 +34,13 @@ public class CategoryStatistics {
 
     public void setPercentage(float percentage) {
         this.percentage = percentage;
+    }
+
+    public int getColorIndex() {
+        return colorIndex;
+    }
+
+    public void setColorIndex(int colorIndex) {
+        this.colorIndex = colorIndex;
     }
 }

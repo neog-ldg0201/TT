@@ -377,9 +377,11 @@ public class StatisticsActivity extends AppCompatActivity {
             }
 
             List<CategoryStatistics> statistics = new ArrayList<>();
-            for (TransactionDao.CategoryAmount ca : categoryAmounts) {
+            for (int i = 0; i < categoryAmounts.size(); i++) {
+                TransactionDao.CategoryAmount ca = categoryAmounts.get(i);
                 CategoryStatistics stat = new CategoryStatistics(ca.category, ca.totalAmount);
                 stat.setPercentage(total > 0 ? (ca.totalAmount * 100f / total) : 0);
+                stat.setColorIndex(i); // 색상 인덱스 설정
                 statistics.add(stat);
             }
 
@@ -664,10 +666,12 @@ public class StatisticsActivity extends AppCompatActivity {
         List<CategoryStatistics> statistics = new ArrayList<>();
         long total = 0;
 
-        for (String category : currentPeriodCategories) {
+        for (int i = 0; i < currentPeriodCategories.size(); i++) {
+            String category = currentPeriodCategories.get(i);
             Long amount = periodData.get(category);
             if (amount != null && amount > 0) {
                 CategoryStatistics stat = new CategoryStatistics(category, amount);
+                stat.setColorIndex(i); // 막대 그래프와 동일한 색상 인덱스 설정
                 statistics.add(stat);
                 total += amount;
             }

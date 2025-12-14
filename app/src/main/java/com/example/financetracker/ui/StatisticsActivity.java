@@ -72,6 +72,9 @@ public class StatisticsActivity extends AppCompatActivity {
     private String customStartDate;
     private String customEndDate;
 
+    // 현재 기간의 카테고리 목록 (막대 그래프 클릭 시 사용)
+    private List<String> currentPeriodCategories = new ArrayList<>();
+
     private static final int[] CHART_COLORS = {
             Color.rgb(255, 128, 171),   // 밝은 핑크
             Color.rgb(255, 159, 128),   // 밝은 오렌지
@@ -141,6 +144,8 @@ public class StatisticsActivity extends AppCompatActivity {
         pieChart.setDrawCenterText(false);
         pieChart.setRotationEnabled(true);
         pieChart.setHighlightPerTapEnabled(true);
+        pieChart.setEntryLabelColor(Color.BLACK);
+        pieChart.setEntryLabelTextSize(11f);
 
         Legend legend = pieChart.getLegend();
         legend.setEnabled(false);
@@ -155,13 +160,7 @@ public class StatisticsActivity extends AppCompatActivity {
         barChart.setDoubleTapToZoomEnabled(false);
 
         Legend legend = barChart.getLegend();
-        legend.setEnabled(true);
-        legend.setVerticalAlignment(Legend.LegendVerticalAlignment.BOTTOM);
-        legend.setHorizontalAlignment(Legend.LegendHorizontalAlignment.CENTER);
-        legend.setOrientation(Legend.LegendOrientation.HORIZONTAL);
-        legend.setDrawInside(false);
-        legend.setWordWrapEnabled(true);
-        legend.setTextSize(11f);
+        legend.setEnabled(false);
 
         XAxis xAxis = barChart.getXAxis();
         xAxis.setPosition(XAxis.XAxisPosition.BOTTOM);
@@ -170,6 +169,39 @@ public class StatisticsActivity extends AppCompatActivity {
 
         barChart.getAxisLeft().setDrawGridLines(false);
         barChart.getAxisRight().setEnabled(false);
+
+        // 막대 클릭 시 정보 표시
+        barChart.setOnChartValueSelectedListener(new com.github.mikephil.charting.listener.OnChartValueSelectedListener() {
+            @Override
+            public void onValueSelected(com.github.mikephil.charting.data.Entry e, com.github.mikephil.charting.highlight.Highlight h) {
+                if (e instanceof BarEntry) {
+                    BarEntry barEntry = (BarEntry) e;
+                    int index = (int) barEntry.getX();
+
+                    // 클릭한 막대의 정보를 Toast로 표시
+                    StringBuilder info = new StringBuilder();
+                    float[] values = barEntry.getYVals();
+                    if (values != null && values.length > 0) {
+                        List<String> categories = getCategoryNamesForPeriod();
+                        for (int i = 0; i < values.length && i < categories.size(); i++) {
+                            if (values[i] > 0) {
+                                info.append(categories.get(i)).append(": ")
+                                    .append(NumberFormat.getNumberInstance(Locale.KOREA).format((long)values[i]))
+                                    .append("원\n");
+                            }
+                        }
+                        if (info.length() > 0) {
+                            Toast.makeText(StatisticsActivity.this, info.toString().trim(), Toast.LENGTH_SHORT).show();
+                        }
+                    }
+                }
+            }
+
+            @Override
+            public void onNothingSelected() {
+                // Do nothing
+            }
+        });
     }
 
     private void setupRecyclerView() {
@@ -531,6 +563,11 @@ public class StatisticsActivity extends AppCompatActivity {
             return;
         }
 
+        // 카테고리 정렬하여 일관된 순서 유지
+        List<String> sortedCategories = new ArrayList<>(categories);
+        java.util.Collections.sort(sortedCategories);
+        currentPeriodCategories = sortedCategories;
+
         List<BarEntry> entries = new ArrayList<>();
         List<String> labels = new ArrayList<>();
 
@@ -539,10 +576,10 @@ public class StatisticsActivity extends AppCompatActivity {
             String period = periods.get(i);
             java.util.Map<String, Long> periodData = data.get(period);
 
-            // 카테고리별 값을 배열로 구성
-            float[] values = new float[categories.size()];
-            for (int j = 0; j < categories.size(); j++) {
-                String category = categories.get(j);
+            // 카테고리별 값을 배열로 구성 (정렬된 순서로)
+            float[] values = new float[sortedCategories.size()];
+            for (int j = 0; j < sortedCategories.size(); j++) {
+                String category = sortedCategories.get(j);
                 Long amount = periodData.get(category);
                 values[j] = amount != null ? amount : 0;
             }
@@ -562,8 +599,14 @@ public class StatisticsActivity extends AppCompatActivity {
         }
 
         BarDataSet dataSet = new BarDataSet(entries, "");
-        dataSet.setColors(CHART_COLORS);
-        dataSet.setStackLabels(categories.toArray(new String[0]));
+
+        // 카테고리별 고정 색상 사용
+        List<Integer> colors = new ArrayList<>();
+        for (int i = 0; i < sortedCategories.size(); i++) {
+            colors.add(CHART_COLORS[i % CHART_COLORS.length]);
+        }
+        dataSet.setColors(colors);
+        dataSet.setStackLabels(sortedCategories.toArray(new String[0]));
 
         dataSet.setValueTextSize(9f);
         dataSet.setValueTextColor(Color.BLACK);
@@ -584,5 +627,9 @@ public class StatisticsActivity extends AppCompatActivity {
         barChart.getXAxis().setLabelCount(Math.min(labels.size(), 12));
         barChart.getXAxis().setLabelRotationAngle(-45f);
         barChart.invalidate();
+    }
+
+    private List<String> getCategoryNamesForPeriod() {
+        return currentPeriodCategories;
     }
 }

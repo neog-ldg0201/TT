@@ -55,6 +55,7 @@ public class StatisticsActivity extends AppCompatActivity {
     private RecyclerView periodDetailRecyclerView;
     private CategoryStatisticsAdapter periodDetailAdapter;
     private TextView periodDetailTitle;
+    private TextView periodDetailTotal;
     private LinearLayout categoryStatsLayout;
     private LinearLayout periodStatsLayout;
 
@@ -121,6 +122,7 @@ public class StatisticsActivity extends AppCompatActivity {
         statisticsRecyclerView = findViewById(R.id.statisticsRecyclerView);
         periodDetailRecyclerView = findViewById(R.id.periodDetailRecyclerView);
         periodDetailTitle = findViewById(R.id.periodDetailTitle);
+        periodDetailTotal = findViewById(R.id.periodDetailTotal);
         categoryStatsLayout = findViewById(R.id.categoryStatsLayout);
         periodStatsLayout = findViewById(R.id.periodStatsLayout);
 
@@ -197,6 +199,7 @@ public class StatisticsActivity extends AppCompatActivity {
             @Override
             public void onNothingSelected() {
                 periodDetailRecyclerView.setVisibility(View.GONE);
+                periodDetailTotal.setVisibility(View.GONE);
                 periodDetailTitle.setText("막대를 클릭하면 상세 내역을 볼 수 있습니다");
             }
         });
@@ -647,6 +650,7 @@ public class StatisticsActivity extends AppCompatActivity {
         java.util.Map<String, Long> periodData = currentPeriodData.get(period);
         if (periodData == null || periodData.isEmpty()) {
             periodDetailRecyclerView.setVisibility(View.GONE);
+            periodDetailTotal.setVisibility(View.GONE);
             periodDetailTitle.setText("선택한 기간에 데이터가 없습니다");
             return;
         }
@@ -685,6 +689,11 @@ public class StatisticsActivity extends AppCompatActivity {
         // RecyclerView 업데이트
         periodDetailAdapter.setStatistics(statistics);
         periodDetailRecyclerView.setVisibility(View.VISIBLE);
+
+        // 합계 표시
+        String formattedTotal = NumberFormat.getNumberInstance(Locale.KOREA).format(total);
+        periodDetailTotal.setText("합계: " + formattedTotal + "원");
+        periodDetailTotal.setVisibility(View.VISIBLE);
     }
 
     private List<String> getCategoryNamesForPeriod() {

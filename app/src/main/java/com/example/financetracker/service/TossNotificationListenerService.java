@@ -63,6 +63,12 @@ public class TossNotificationListenerService extends NotificationListenerService
         String titleStr = title.toString();
         String textStr = text.toString();
 
+        // 광고 알림 무시
+        if (titleStr.contains("(광고)") || textStr.contains("(광고)")) {
+            Log.d(TAG, "Advertisement notification ignored");
+            return;
+        }
+
         Log.d(TAG, "Title: " + titleStr);
         Log.d(TAG, "Text: " + textStr);
 

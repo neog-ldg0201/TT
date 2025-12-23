@@ -231,8 +231,22 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:layout_marginTop="8dp"
-                    android:layout_marginBottom="16dp"
                     android:nestedScrollingEnabled="false"
+                    android:visibility="gone"/>
+
+                <!-- Period Detail Total -->
+                <TextView
+                    android:id="@+id/periodDetailTotal"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="합계: 0원"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/text_primary"
+                    android:gravity="end"
+                    android:padding="12dp"
+                    android:layout_marginEnd="8dp"
+                    android:layout_marginBottom="16dp"
                     android:visibility="gone"/>
 
             </LinearLayout>
